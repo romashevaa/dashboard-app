@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Sidebar } from "./sidebar";
 
 /**
@@ -12,20 +13,42 @@ import { Sidebar } from "./sidebar";
 export function MobileNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
 
+  // While the drawer is open, close on Escape and lock background scrolling.
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
     <div className="md:hidden">
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
-        className="grid size-9 place-items-center rounded-md border border-white/10 text-foreground transition-colors hover:bg-white/5"
       >
         <Menu className="size-5" aria-hidden />
-      </button>
+      </Button>
 
       {open ? (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div
+          className="fixed inset-0 z-50 md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation menu"
+        >
           <button
             type="button"
             aria-label="Close menu"
@@ -33,14 +56,16 @@ export function MobileNav({ isAdmin = false }: { isAdmin?: boolean }) {
             className="absolute inset-0 bg-black/60"
           />
           <div className="absolute inset-y-0 left-0 w-64 bg-background shadow-xl">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setOpen(false)}
               aria-label="Close menu"
-              className="absolute right-3 top-5 grid size-8 place-items-center rounded-md text-muted-foreground transition-colors hover:text-white"
+              className="absolute right-3 top-5 size-8 text-muted-foreground"
             >
               <X className="size-5" aria-hidden />
-            </button>
+            </Button>
             <Sidebar isAdmin={isAdmin} onNavigate={() => setOpen(false)} />
           </div>
         </div>

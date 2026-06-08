@@ -1,18 +1,12 @@
+import type { Database } from "./database.types";
+
 /**
- * Hand-written types for the app data model. Once a live Supabase project is
- * connected, these can be replaced by generated types
- * (`supabase gen types typescript`).
+ * App-facing aliases derived from the generated database schema, so the rest
+ * of the app imports stable names rather than deep index types.
  */
 
-export type AppRole = "admin" | "editor" | "member";
+export type AppRole = Database["public"]["Enums"]["app_role"];
 
 export const APP_ROLES: AppRole[] = ["admin", "editor", "member"];
 
-export type Profile = {
-  id: string;
-  email: string;
-  full_name: string | null;
-  role: AppRole;
-  created_at: string;
-  updated_at: string;
-};
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];

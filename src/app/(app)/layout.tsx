@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { LogOut } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { getCurrentProfile } from "@/lib/auth/profile";
@@ -40,13 +41,15 @@ export default async function AppLayout({
             👋 Hello, {displayName(profile)}!
           </p>
           <form action="/auth/signout" method="post">
-            <button
+            <Button
               type="submit"
+              variant="outline"
+              size="icon"
               aria-label="Sign out"
-              className="grid size-9 shrink-0 place-items-center rounded border border-white/10 text-muted-foreground transition-colors hover:text-white md:size-8"
+              className="shrink-0 text-muted-foreground"
             >
               <LogOut className="size-4" aria-hidden />
-            </button>
+            </Button>
           </form>
         </header>
 

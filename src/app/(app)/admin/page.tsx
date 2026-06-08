@@ -3,7 +3,6 @@ import { Shield } from "lucide-react";
 
 import { requireAdmin } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile } from "@/lib/db/types";
 import { RoleForm } from "./role-form";
 
 export const metadata: Metadata = {
@@ -19,7 +18,7 @@ export default async function AdminPage() {
     .select("*")
     .order("created_at", { ascending: true });
 
-  const profiles = (data as Profile[] | null) ?? [];
+  const profiles = data ?? [];
 
   return (
     <section>

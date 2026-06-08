@@ -82,6 +82,12 @@ export async function verifySignIn(
   const token = String(formData.get("token") ?? "").trim();
   const redirectTo = sanitizeRedirect(String(formData.get("redirectTo") ?? "/"));
 
+  // Defense in depth: only allowed domains ever receive a code, but re-check
+  // here too (the DB before-user-created hook remains the authoritative gate).
+  if (!isAllowedEmail(email)) {
+    return { error: "Use your Webfolks email address to sign in." };
+  }
+
   if (!/^\d{6}$/.test(token)) {
     return { error: "Enter the 6-digit code from your email." };
   }
