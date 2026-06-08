@@ -48,12 +48,26 @@ const SOCIALS: { label: string; href: string; icon: ComponentType<IconProps> }[]
     { label: "Website", href: "https://www.webfolks.io", icon: Globe },
   ];
 
-export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
+export function Sidebar({
+  isAdmin = false,
+  className,
+  onNavigate,
+}: {
+  isAdmin?: boolean;
+  className?: string;
+  /** Called when a nav link is clicked — used to close the mobile drawer. */
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const items = isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
 
   return (
-    <aside className="sticky top-0 flex h-dvh w-64 shrink-0 flex-col justify-between gap-6 py-5">
+    <aside
+      className={cn(
+        "flex h-dvh w-64 shrink-0 flex-col justify-between gap-6 py-5",
+        className
+      )}
+    >
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-2 px-5">
           <span className="grid size-6 place-items-center rounded-md bg-brand text-xs font-bold text-white">
@@ -71,6 +85,7 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-3 rounded-lg p-2.5 text-base font-medium transition-colors",

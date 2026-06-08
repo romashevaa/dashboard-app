@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { LogOut } from "lucide-react";
 
 import { Sidebar } from "@/components/layout/sidebar";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import type { Profile } from "@/lib/db/types";
 
@@ -26,27 +27,30 @@ export default async function AppLayout({
     redirect("/login");
   }
 
+  const isAdmin = profile.role === "admin";
+
   return (
     <div className="flex min-h-dvh bg-background">
-      <Sidebar isAdmin={profile.role === "admin"} />
+      <Sidebar isAdmin={isAdmin} className="sticky top-0 hidden md:flex" />
 
-      <div className="flex flex-1 flex-col gap-4 pr-4 pt-4 pb-4">
-        <header className="flex items-center justify-between pl-2">
-          <p className="text-xl font-semibold tracking-tight">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center gap-3 px-4 py-3 md:py-4 md:pr-4 md:pl-2">
+          <MobileNav isAdmin={isAdmin} />
+          <p className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight md:text-xl">
             👋 Hello, {displayName(profile)}!
           </p>
           <form action="/auth/signout" method="post">
             <button
               type="submit"
               aria-label="Sign out"
-              className="grid size-8 place-items-center rounded border border-white/10 text-muted-foreground transition-colors hover:text-white"
+              className="grid size-9 shrink-0 place-items-center rounded border border-white/10 text-muted-foreground transition-colors hover:text-white md:size-8"
             >
               <LogOut className="size-4" aria-hidden />
             </button>
           </form>
         </header>
 
-        <main className="flex-1 rounded-lg border border-white/10 bg-surface p-6">
+        <main className="flex-1 border-t border-white/10 bg-surface p-4 md:mx-4 md:mb-4 md:rounded-lg md:border md:p-6">
           {children}
         </main>
       </div>
