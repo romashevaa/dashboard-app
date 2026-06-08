@@ -94,6 +94,12 @@
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
   }
+  /* Tailwind's reset sets buttons to the default cursor — restore the pointer
+   * for any enabled button or role=button (links are already pointers). */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 /*

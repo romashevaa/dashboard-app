@@ -15,8 +15,7 @@ export function SectionPlaceholder({
     <section>
       <div className="mb-6 flex items-center gap-3">
         <span
-          className="grid size-10 place-items-center rounded-lg text-xl"
-          style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+          className="grid size-10 place-items-center rounded-lg bg-white/10 text-xl"
           aria-hidden
         >
           {emoji}

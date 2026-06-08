@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,9 @@ const verifyInit: VerifyState = {};
 const inputClass =
   "h-11 rounded-md border border-input bg-background px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:h-10 md:text-sm";
 
+const linkButtonClass =
+  "text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-50";
+
 export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
   const [reqState, requestAction, reqPending] = useActionState(
     requestSignIn,
@@ -26,11 +29,15 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
     verifySignIn,
     verifyInit
   );
+  // Lets the user go back to the email step from the code step.
+  const [editingEmail, setEditingEmail] = useState(false);
 
-  // Phase 2: email sent → enter the code (or use the link in the email).
-  if (reqState.status === "sent") {
+  const showCodeStep = reqState.status === "sent" && !editingEmail;
+
+  // Step 2: code entry (the email also contains a clickable magic link).
+  if (showCodeStep) {
     return (
-      <form action={verifyAction} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <p
           role="status"
           className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground"
@@ -40,44 +47,71 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
           code below, or just click the link in the email.
         </p>
 
-        <input type="hidden" name="email" value={reqState.email} />
-        <input type="hidden" name="redirectTo" value={redirectTo} />
+        <form action={verifyAction} className="flex flex-col gap-4">
+          <input type="hidden" name="email" value={reqState.email} />
+          <input type="hidden" name="redirectTo" value={redirectTo} />
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="token" className="text-sm font-medium">
-            6-digit code
-          </label>
-          <input
-            id="token"
-            name="token"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            autoComplete="one-time-code"
-            maxLength={6}
-            minLength={6}
-            required
-            autoFocus
-            placeholder="123456"
-            className={`${inputClass} text-center tracking-[0.5em]`}
-          />
+          <div className="flex flex-col gap-2">
+            <label htmlFor="token" className="text-sm font-medium">
+              6-digit code
+            </label>
+            <input
+              id="token"
+              name="token"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="one-time-code"
+              maxLength={6}
+              minLength={6}
+              required
+              autoFocus
+              placeholder="123456"
+              className={`${inputClass} text-center tracking-[0.5em]`}
+            />
+          </div>
+
+          {verState.error ? (
+            <p className="text-sm text-destructive" role="alert">
+              {verState.error}
+            </p>
+          ) : null}
+
+          <Button type="submit" size="xl" disabled={verPending}>
+            {verPending ? "Verifying…" : "Verify code"}
+          </Button>
+        </form>
+
+        <div className="flex items-center justify-between">
+          {/* Resend re-runs the request action with the same email. */}
+          <form action={requestAction}>
+            <input type="hidden" name="email" value={reqState.email} />
+            <input type="hidden" name="redirectTo" value={redirectTo} />
+            <button type="submit" className={linkButtonClass} disabled={reqPending}>
+              {reqPending ? "Resending…" : "Resend code"}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            className={linkButtonClass}
+            onClick={() => setEditingEmail(true)}
+          >
+            Use a different email
+          </button>
         </div>
-
-        {verState.error ? (
-          <p className="text-sm text-destructive" role="alert">
-            {verState.error}
-          </p>
-        ) : null}
-
-        <Button type="submit" size="xl" disabled={verPending}>
-          {verPending ? "Verifying…" : "Verify code"}
-        </Button>
-      </form>
+      </div>
     );
   }
 
-  // Phase 1: enter email.
+  // Step 1: email entry.
   return (
-    <form action={requestAction} className="flex flex-col gap-4">
+    <form
+      action={(formData) => {
+        setEditingEmail(false);
+        requestAction(formData);
+      }}
+      className="flex flex-col gap-4"
+    >
       <input type="hidden" name="redirectTo" value={redirectTo} />
 
       <div className="flex flex-col gap-2">

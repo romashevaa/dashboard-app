@@ -112,8 +112,7 @@ export function Sidebar({
             aria-label={label}
             target="_blank"
             rel="noreferrer"
-            className="grid size-8 place-items-center rounded text-muted-foreground transition-colors hover:text-white"
-            style={{ backgroundColor: "var(--surface)" }}
+            className="grid size-8 place-items-center rounded bg-surface text-muted-foreground transition-colors hover:text-white"
           >
             <Icon className="size-4" aria-hidden />
           </a>

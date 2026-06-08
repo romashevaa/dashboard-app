@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -13,6 +13,13 @@ export const metadata: Metadata = {
     template: "%s · Webfolks Dashboard",
   },
   description: "Internal team hub for the Webfolks agency.",
+};
+
+// Ensure phones render at device width (so the responsive sidebar/burger
+// breakpoints apply) rather than falling back to a desktop-width viewport.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
