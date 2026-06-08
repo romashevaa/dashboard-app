@@ -16,6 +16,10 @@ decisions.
 
 ## Getting started
 
+> For a full walkthrough — local Supabase, magic-link sign-in, and promoting
+> your first admin — see **[`docs/RUNNING.md`](./docs/RUNNING.md)**. The quick
+> version:
+
 ### 1. Install dependencies
 
 ```bash
