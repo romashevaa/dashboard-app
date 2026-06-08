@@ -12,10 +12,16 @@ function displayName(profile: Profile): string {
   return profile.email.split("@")[0] ?? profile.email;
 }
 
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).slice(0, 2);
+  return parts.map((p) => p[0]?.toUpperCase() ?? "").join("") || "?";
+}
+
 /**
  * Layout for all authenticated app routes. The proxy already gates these
  * paths; this re-checks server-side (RLS remains the primary guard) and
- * renders the Figma-styled shell (sidebar + content panel).
+ * renders the Figma-styled shell: flush sidebar + a single surface panel that
+ * holds the greeting bar and the page content.
  */
 export default async function AppLayout({
   children,
@@ -29,33 +35,42 @@ export default async function AppLayout({
   }
 
   const isAdmin = profile.role === "admin";
+  const name = displayName(profile);
 
   return (
     <div className="flex min-h-dvh bg-background">
       <Sidebar isAdmin={isAdmin} className="sticky top-0 hidden md:flex" />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 px-4 py-3 md:py-4 md:pr-4 md:pl-2">
-          <MobileNav isAdmin={isAdmin} />
-          <p className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight md:text-xl">
-            👋 Hello, {displayName(profile)}!
-          </p>
-          <form action="/auth/signout" method="post">
-            <Button
-              type="submit"
-              variant="outline"
-              size="icon"
-              aria-label="Sign out"
-              className="shrink-0 text-muted-foreground"
-            >
-              <LogOut className="size-4" aria-hidden />
-            </Button>
-          </form>
-        </header>
+      <div className="flex min-w-0 flex-1 flex-col md:py-2 md:pr-2">
+        <div className="flex flex-1 flex-col gap-6 border-t border-white/10 bg-surface p-4 md:rounded-xl md:border md:p-6">
+          <header className="flex items-center gap-3">
+            <MobileNav isAdmin={isAdmin} />
+            <p className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight md:text-xl">
+              👋 Hello, {name}!
+            </p>
+            <div className="flex shrink-0 items-center gap-2">
+              <span
+                aria-hidden
+                className="grid size-9 place-items-center rounded-md bg-white/10 text-sm font-semibold text-white"
+              >
+                {initials(name)}
+              </span>
+              <form action="/auth/signout" method="post">
+                <Button
+                  type="submit"
+                  variant="outline"
+                  size="icon"
+                  aria-label="Sign out"
+                  className="text-muted-foreground"
+                >
+                  <LogOut className="size-4" aria-hidden />
+                </Button>
+              </form>
+            </div>
+          </header>
 
-        <main className="flex-1 border-t border-white/10 bg-surface p-4 md:mx-4 md:mb-4 md:rounded-lg md:border md:p-6">
-          {children}
-        </main>
+          <main className="flex-1">{children}</main>
+        </div>
       </div>
     </div>
   );
