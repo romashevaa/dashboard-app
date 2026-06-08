@@ -1,5 +1,3 @@
-import type { LucideIcon } from "lucide-react";
-
 /**
  * Lightweight placeholder for feature sections that are scaffolded but not yet
  * built. Replaced as each feature lands (CLAUDE.md → Build sequence).
@@ -7,17 +5,21 @@ import type { LucideIcon } from "lucide-react";
 export function SectionPlaceholder({
   title,
   description,
-  icon: Icon,
+  emoji,
 }: {
   title: string;
   description: string;
-  icon: LucideIcon;
+  emoji: string;
 }) {
   return (
     <section>
       <div className="mb-6 flex items-center gap-3">
-        <span className="grid size-10 place-items-center rounded-lg bg-secondary text-secondary-foreground">
-          <Icon className="size-5" aria-hidden />
+        <span
+          className="grid size-10 place-items-center rounded-lg text-xl"
+          style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+          aria-hidden
+        >
+          {emoji}
         </span>
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
@@ -25,7 +27,7 @@ export function SectionPlaceholder({
         </div>
       </div>
 
-      <div className="grid place-items-center rounded-xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center">
+      <div className="grid place-items-center rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center">
         <p className="text-sm text-muted-foreground">
           This section is coming soon.
         </p>

@@ -1,5 +1,3 @@
-import { Link2 } from "lucide-react";
-
 import { SectionPlaceholder } from "@/components/section-placeholder";
 
 export default function LinksPage() {
@@ -7,7 +5,7 @@ export default function LinksPage() {
     <SectionPlaceholder
       title="Links"
       description="Doc, brand, and social links."
-      icon={Link2}
+      emoji="🔗"
     />
   );
 }

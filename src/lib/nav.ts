@@ -1,39 +1,28 @@
-import {
-  BookOpen,
-  CalendarDays,
-  KeyRound,
-  LayoutDashboard,
-  Link2,
-  LayoutTemplate,
-  Shield,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
-
 export type NavItem = {
   label: string;
   href: string;
-  icon: LucideIcon;
+  /** Emoji glyph used as the nav icon, matching the Figma sidebar. */
+  emoji: string;
 };
 
 /**
  * Primary navigation for the dashboard. Mirrors the planned feature set
- * (CLAUDE.md → Project). Sections are scaffolded as placeholders and filled
- * in feature by feature.
+ * (CLAUDE.md → Project) and the Figma sidebar (node 920:7090). Sections are
+ * scaffolded as placeholders and filled in feature by feature.
  */
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Overview", href: "/", icon: LayoutDashboard },
-  { label: "Members", href: "/members", icon: Users },
-  { label: "Credentials", href: "/credentials", icon: KeyRound },
-  { label: "Resources", href: "/resources", icon: BookOpen },
-  { label: "Templates", href: "/templates", icon: LayoutTemplate },
-  { label: "Events", href: "/events", icon: CalendarDays },
-  { label: "Links", href: "/links", icon: Link2 },
+  { label: "My Dashboard", href: "/", emoji: "🎨" },
+  { label: "Credentials", href: "/credentials", emoji: "🔐" },
+  { label: "Resources", href: "/resources", emoji: "🦄" },
+  { label: "Members", href: "/members", emoji: "👩🏼‍💻" },
+  { label: "Templates", href: "/templates", emoji: "✍️" },
+  { label: "Events", href: "/events", emoji: "📆" },
+  { label: "Links", href: "/links", emoji: "🔗" },
 ];
 
 /** Admin-only navigation, appended for users with the `admin` role. */
 export const ADMIN_NAV_ITEM: NavItem = {
   label: "Admin",
   href: "/admin",
-  icon: Shield,
+  emoji: "🛡️",
 };

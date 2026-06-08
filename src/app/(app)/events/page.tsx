@@ -1,5 +1,3 @@
-import { CalendarDays } from "lucide-react";
-
 import { SectionPlaceholder } from "@/components/section-placeholder";
 
 export default function EventsPage() {
@@ -7,7 +5,7 @@ export default function EventsPage() {
     <SectionPlaceholder
       title="Events"
       description="Events and holidays calendar."
-      icon={CalendarDays}
+      emoji="📆"
     />
   );
 }
