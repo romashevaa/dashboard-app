@@ -1,28 +1,39 @@
 "use server";
 
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { isAllowedEmail } from "@/lib/auth/allowed-domain";
 import { createClient } from "@/lib/supabase/server";
 
-export type LoginState = {
+export type RequestState = {
   status: "idle" | "sent" | "error";
   message?: string;
   email?: string;
 };
 
+export type VerifyState = {
+  error?: string;
+};
+
+/** Only allow same-origin, absolute-path redirects (no open redirects). */
+function sanitizeRedirect(value: string | null): string {
+  if (value && value.startsWith("/") && !value.startsWith("//")) return value;
+  return "/";
+}
+
 /**
- * Requests a passwordless magic link for the given email.
+ * Requests a passwordless sign-in email. Supabase sends both a magic link and
+ * a 6-digit code (the email template renders both) — the user can use either.
  *
- * Enforces the corporate-domain allow-list before touching Supabase. The DB
- * `before-user-created` hook is the authoritative gate; this check keeps
- * non-allowed addresses from ever triggering an email.
+ * Enforces the corporate-domain allow-list before touching Supabase.
  */
-export async function signInWithMagicLink(
-  _prevState: LoginState,
+export async function requestSignIn(
+  _prevState: RequestState,
   formData: FormData
-): Promise<LoginState> {
+): Promise<RequestState> {
   const email = String(formData.get("email") ?? "").trim();
+  const redirectTo = sanitizeRedirect(String(formData.get("redirectTo") ?? "/"));
 
   if (!email) {
     return { status: "error", message: "Enter your work email address." };
@@ -42,21 +53,49 @@ export async function signInWithMagicLink(
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: `${origin}/auth/callback?redirectTo=${encodeURIComponent(
+        redirectTo
+      )}`,
     },
   });
 
   if (error) {
     return {
       status: "error",
-      message: "Couldn't send the link. Try again in a moment.",
+      message: "Couldn't send the email. Try again in a moment.",
       email,
     };
   }
 
-  return {
-    status: "sent",
-    message: `We sent a sign-in link to ${email}. Check your inbox.`,
+  return { status: "sent", email };
+}
+
+/**
+ * Verifies the 6-digit code from the sign-in email and establishes the session.
+ * On success, redirects into the app.
+ */
+export async function verifySignIn(
+  _prevState: VerifyState,
+  formData: FormData
+): Promise<VerifyState> {
+  const email = String(formData.get("email") ?? "").trim();
+  const token = String(formData.get("token") ?? "").trim();
+  const redirectTo = sanitizeRedirect(String(formData.get("redirectTo") ?? "/"));
+
+  if (!/^\d{6}$/.test(token)) {
+    return { error: "Enter the 6-digit code from your email." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({
     email,
-  };
+    token,
+    type: "email",
+  });
+
+  if (error) {
+    return { error: "That code is invalid or expired. Request a new one." };
+  }
+
+  redirect(redirectTo);
 }

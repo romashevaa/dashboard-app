@@ -1,0 +1,52 @@
+<!--
+  Magic-link / OTP sign-in email for the Webfolks Dashboard.
+  Renders both a clickable link ({{ .ConfirmationURL }}) and the 6-digit
+  code ({{ .Token }}) so the user can sign in either way.
+-->
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#181d49;padding:32px 0;font-family:Inter,Arial,sans-serif;">
+  <tr>
+    <td align="center">
+      <table width="420" cellpadding="0" cellspacing="0" style="background:#0e1441;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:32px;">
+        <tr>
+          <td style="color:rgba(255,255,255,0.64);font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">
+            Webfolks
+          </td>
+        </tr>
+        <tr>
+          <td style="color:rgba(255,255,255,0.84);font-size:20px;font-weight:600;padding-top:8px;">
+            Sign in to the dashboard
+          </td>
+        </tr>
+        <tr>
+          <td style="color:rgba(255,255,255,0.64);font-size:14px;line-height:1.5;padding-top:8px;">
+            Enter this code on the sign-in screen:
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 0;">
+            <div style="display:inline-block;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:8px;padding:14px 20px;">
+              {{ .Token }}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="color:rgba(255,255,255,0.64);font-size:14px;line-height:1.5;">
+            …or just click the button below:
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-top:16px;">
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#0059d6;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:8px;">
+              Sign in
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="color:rgba(255,255,255,0.4);font-size:12px;line-height:1.5;padding-top:24px;">
+            This code expires in 1 hour. If you didn’t request it, you can ignore this email.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

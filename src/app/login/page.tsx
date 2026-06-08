@@ -6,7 +6,17 @@ export const metadata: Metadata = {
   title: "Sign in · Webfolks Dashboard",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirectTo?: string }>;
+}) {
+  const { redirectTo } = await searchParams;
+  const safeRedirect =
+    redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+      ? redirectTo
+      : "/";
+
   return (
     <main className="flex min-h-dvh items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-sm rounded-xl border border-border bg-background p-8 shadow-sm">
@@ -18,12 +28,12 @@ export default function LoginPage() {
             Sign in to the dashboard
           </h1>
           <p className="text-sm text-muted-foreground">
-            Enter your work email and we&apos;ll send you a magic link — no
-            password needed.
+            Enter your work email and we&apos;ll send you a sign-in link and a
+            code — no password needed.
           </p>
         </div>
 
-        <LoginForm />
+        <LoginForm redirectTo={safeRedirect} />
       </div>
     </main>
   );
