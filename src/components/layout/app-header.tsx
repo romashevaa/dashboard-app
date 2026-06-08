@@ -1,7 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { MainNav } from "./main-nav";
 
-export function AppHeader({ email }: { email: string | null }) {
+export function AppHeader({
+  email,
+  isAdmin = false,
+}: {
+  email: string | null;
+  isAdmin?: boolean;
+}) {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
@@ -15,7 +21,7 @@ export function AppHeader({ email }: { email: string | null }) {
         </div>
 
         <div className="order-last w-full sm:order-none sm:w-auto sm:flex-1">
-          <MainNav />
+          <MainNav isAdmin={isAdmin} />
         </div>
 
         <div className="flex items-center gap-3">

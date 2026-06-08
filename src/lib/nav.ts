@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Link2,
   LayoutTemplate,
+  Shield,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -29,3 +30,10 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Events", href: "/events", icon: CalendarDays },
   { label: "Links", href: "/links", icon: Link2 },
 ];
+
+/** Admin-only navigation, appended for users with the `admin` role. */
+export const ADMIN_NAV_ITEM: NavItem = {
+  label: "Admin",
+  href: "/admin",
+  icon: Shield,
+};
