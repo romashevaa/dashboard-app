@@ -8,8 +8,10 @@ import { getCurrentProfile } from "@/lib/auth/profile";
 import type { Profile } from "@/lib/db/types";
 
 function displayName(profile: Profile): string {
-  if (profile.full_name) return profile.full_name;
-  return profile.email.split("@")[0] ?? profile.email;
+  const base =
+    profile.full_name?.trim() || profile.email.split("@")[0] || profile.email;
+  // Always start with a capital letter (email-derived names are lowercase).
+  return base.charAt(0).toUpperCase() + base.slice(1);
 }
 
 function initials(name: string): string {
