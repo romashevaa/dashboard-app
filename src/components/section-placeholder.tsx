@@ -1,3 +1,5 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon";
+
 /**
  * Lightweight placeholder for feature sections that are scaffolded but not yet
  * built. Replaced as each feature lands (CLAUDE.md → Build sequence).
@@ -5,20 +7,18 @@
 export function SectionPlaceholder({
   title,
   description,
-  emoji,
+  icon,
 }: {
   title: string;
   description: string;
-  emoji: string;
+  /** Emoji image name in /public/emoji. */
+  icon: string;
 }) {
   return (
     <section>
       <div className="mb-6 flex items-center gap-3">
-        <span
-          className="grid size-10 place-items-center rounded-lg bg-white/10 text-xl"
-          aria-hidden
-        >
-          {emoji}
+        <span className="grid size-10 place-items-center rounded-lg bg-white/10">
+          <EmojiIcon name={icon} size={22} />
         </span>
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{title}</h1>

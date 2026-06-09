@@ -5,7 +5,7 @@ export default function CredentialsPage() {
     <SectionPlaceholder
       title="Credentials"
       description="Shared tool credentials."
-      emoji="🔐"
+      icon="lock"
     />
   );
 }

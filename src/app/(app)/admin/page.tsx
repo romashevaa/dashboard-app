@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Shield } from "lucide-react";
 
 import { requireAdmin } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
+import { EmojiIcon } from "@/components/ui/emoji-icon";
 import { RoleForm } from "./role-form";
 
 export const metadata: Metadata = {
@@ -23,8 +23,8 @@ export default async function AdminPage() {
   return (
     <section>
       <div className="mb-6 flex items-center gap-3">
-        <span className="grid size-10 place-items-center rounded-lg bg-secondary text-secondary-foreground">
-          <Shield className="size-5" aria-hidden />
+        <span className="grid size-10 place-items-center rounded-lg bg-white/10">
+          <EmojiIcon name="shield" size={22} />
         </span>
         <div>
           <h1 className="text-xl font-semibold tracking-tight">

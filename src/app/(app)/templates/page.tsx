@@ -5,7 +5,7 @@ export default function TemplatesPage() {
     <SectionPlaceholder
       title="Templates"
       description="Reusable message templates."
-      emoji="✍️"
+      icon="writing-hand"
     />
   );
 }

@@ -5,7 +5,7 @@ export default function LinksPage() {
     <SectionPlaceholder
       title="Links"
       description="Doc, brand, and social links."
-      emoji="🔗"
+      icon="link"
     />
   );
 }

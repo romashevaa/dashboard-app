@@ -1,5 +1,4 @@
-import type { LucideIcon } from "lucide-react";
-
+import { EmojiIcon } from "@/components/ui/emoji-icon";
 import { cn } from "@/lib/utils";
 
 /**
@@ -8,12 +7,13 @@ import { cn } from "@/lib/utils";
  */
 export function DashboardCard({
   title,
-  icon: Icon,
+  icon,
   className,
   children,
 }: {
   title: string;
-  icon: LucideIcon;
+  /** Emoji image name in /public/emoji. */
+  icon: string;
   className?: string;
   children?: React.ReactNode;
 }) {
@@ -24,8 +24,8 @@ export function DashboardCard({
         className
       )}
     >
-      <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-        <Icon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+      <h2 className="flex items-center gap-3 text-lg font-semibold tracking-tight">
+        <EmojiIcon name={icon} size={22} />
         {title}
       </h2>
       {children}

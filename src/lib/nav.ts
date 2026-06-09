@@ -1,8 +1,8 @@
 export type NavItem = {
   label: string;
   href: string;
-  /** Emoji glyph used as the nav icon, matching the Figma sidebar. */
-  emoji: string;
+  /** Emoji image name in /public/emoji (see EmojiIcon), matching Figma. */
+  icon: string;
 };
 
 /**
@@ -11,18 +11,18 @@ export type NavItem = {
  * scaffolded as placeholders and filled in feature by feature.
  */
 export const NAV_ITEMS: NavItem[] = [
-  { label: "My Dashboard", href: "/", emoji: "🎨" },
-  { label: "Credentials", href: "/credentials", emoji: "🔐" },
-  { label: "Resources", href: "/resources", emoji: "🦄" },
-  { label: "Members", href: "/members", emoji: "👩🏼‍💻" },
-  { label: "Templates", href: "/templates", emoji: "✍️" },
-  { label: "Events", href: "/events", emoji: "📆" },
-  { label: "Links", href: "/links", emoji: "🔗" },
+  { label: "My Dashboard", href: "/", icon: "palette" },
+  { label: "Credentials", href: "/credentials", icon: "lock" },
+  { label: "Resources", href: "/resources", icon: "unicorn" },
+  { label: "Members", href: "/members", icon: "technologist" },
+  { label: "Templates", href: "/templates", icon: "writing-hand" },
+  { label: "Events", href: "/events", icon: "calendar" },
+  { label: "Links", href: "/links", icon: "link" },
 ];
 
 /** Admin-only navigation, appended for users with the `admin` role. */
 export const ADMIN_NAV_ITEM: NavItem = {
   label: "Admin",
   href: "/admin",
-  emoji: "🛡️",
+  icon: "shield",
 };

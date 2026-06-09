@@ -5,7 +5,7 @@ export default function MembersPage() {
     <SectionPlaceholder
       title="Members"
       description="The team directory."
-      emoji="👩🏼‍💻"
+      icon="technologist"
     />
   );
 }

@@ -7,6 +7,8 @@ import { Globe } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV_ITEM, NAV_ITEMS } from "@/lib/nav";
+import { EmojiIcon } from "@/components/ui/emoji-icon";
+import { WebfolksLogo } from "./webfolks-logo";
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -69,13 +71,8 @@ export function Sidebar({
       )}
     >
       <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-2 px-5">
-          <span className="grid size-6 place-items-center rounded-md bg-brand text-xs font-bold text-white">
-            W
-          </span>
-          <span className="text-base font-semibold tracking-tight text-foreground">
-            WebFolks
-          </span>
+        <div className="px-5">
+          <WebfolksLogo />
         </div>
 
         <nav aria-label="Primary" className="flex flex-col gap-0.5 px-2.5">
@@ -94,9 +91,7 @@ export function Sidebar({
                     : "text-muted-foreground hover:bg-white/5 hover:text-white"
                 )}
               >
-                <span className="text-xl leading-none" aria-hidden>
-                  {item.emoji}
-                </span>
+                <EmojiIcon name={item.icon} size={22} />
                 {item.label}
               </Link>
             );

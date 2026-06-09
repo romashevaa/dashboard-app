@@ -5,7 +5,7 @@ export default function EventsPage() {
     <SectionPlaceholder
       title="Events"
       description="Events and holidays calendar."
-      emoji="📆"
+      icon="calendar"
     />
   );
 }
