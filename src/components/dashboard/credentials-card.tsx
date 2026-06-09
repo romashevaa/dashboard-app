@@ -40,9 +40,9 @@ export function CredentialsCard({ className }: { className?: string }) {
         </div>
       </div>
 
-      {/* Obscured preview — clipped at the card's bottom edge. */}
-      <div className="px-5">
-        <div className="flex flex-col rounded-t-lg border border-white/5 bg-white/[0.04]">
+      {/* Obscured preview — bleeds off the right edge and clips at the bottom. */}
+      <div className="pl-5">
+        <div className="flex flex-col rounded-tl-lg border border-white/5 bg-white/[0.04]">
           <div className="flex items-center gap-3 px-4 py-3.5">
             <span className="size-6 shrink-0 rounded-full bg-white/10" />
             <span className="h-2 w-28 rounded-full bg-gradient-to-r from-white/25 to-transparent" />

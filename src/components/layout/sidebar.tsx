@@ -70,7 +70,7 @@ export function Sidebar({
         className
       )}
     >
-      <div className="flex flex-col gap-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
         <div className="px-5">
           <WebfolksLogo />
         </div>

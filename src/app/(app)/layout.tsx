@@ -41,11 +41,11 @@ export default async function AppLayout({
   const name = displayName(profile);
 
   return (
-    <div className="flex min-h-dvh bg-background">
-      <Sidebar isAdmin={isAdmin} className="sticky top-0 hidden md:flex" />
+    <div className="flex h-dvh overflow-hidden bg-background">
+      <Sidebar isAdmin={isAdmin} className="hidden md:flex" />
 
-      <div className="flex min-w-0 flex-1 flex-col md:py-2 md:pr-2">
-        <div className="flex flex-1 flex-col gap-6 border-t border-white/10 bg-surface p-4 md:rounded-xl md:border md:p-6">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col md:py-2 md:pr-2">
+        <div className="flex min-h-0 flex-1 flex-col gap-6 border-t border-white/10 bg-surface p-4 md:rounded-xl md:border md:p-6">
           <header className="flex items-center gap-3">
             <MobileNav isAdmin={isAdmin} />
             <p className="flex min-w-0 flex-1 items-center gap-3 text-lg font-semibold tracking-tight md:text-xl">
@@ -73,7 +73,7 @@ export default async function AppLayout({
             </div>
           </header>
 
-          <main className="flex-1">{children}</main>
+          <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>
     </div>

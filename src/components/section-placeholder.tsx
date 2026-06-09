@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
 import { EmojiIcon } from "@/components/ui/emoji-icon";
 
 /**
@@ -16,6 +19,14 @@ export function SectionPlaceholder({
 }) {
   return (
     <section>
+      <Link
+        href="/"
+        className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" aria-hidden />
+        Back to dashboard
+      </Link>
+
       <div className="mb-6 flex items-center gap-3">
         <span className="grid size-10 place-items-center rounded-lg bg-white/10">
           <EmojiIcon name={icon} size={22} />
