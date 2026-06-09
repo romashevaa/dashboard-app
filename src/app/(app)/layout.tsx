@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { EmojiIcon } from "@/components/ui/emoji-icon";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { getCurrentProfile } from "@/lib/auth/profile";
@@ -47,8 +48,9 @@ export default async function AppLayout({
         <div className="flex flex-1 flex-col gap-6 border-t border-white/10 bg-surface p-4 md:rounded-xl md:border md:p-6">
           <header className="flex items-center gap-3">
             <MobileNav isAdmin={isAdmin} />
-            <p className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight md:text-xl">
-              👋 Hello, {name}!
+            <p className="flex min-w-0 flex-1 items-center gap-3 text-lg font-semibold tracking-tight md:text-xl">
+              <EmojiIcon name="wave" size={22} />
+              <span className="truncate">Hello, {name}!</span>
             </p>
             <div className="flex shrink-0 items-center gap-2">
               <span
