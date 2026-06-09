@@ -1,3 +1,4 @@
+import { CredentialsCard } from "@/components/dashboard/credentials-card";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 
 /**
@@ -29,11 +30,7 @@ export default function OverviewPage() {
         icon="page"
         className="lg:col-start-1 lg:row-start-[5] lg:row-span-[6]"
       />
-      <DashboardCard
-        title="Credentials"
-        icon="lock"
-        className="lg:col-start-2 lg:row-start-[5] lg:row-span-[3]"
-      />
+      <CredentialsCard className="lg:col-start-2 lg:row-start-[5] lg:row-span-[3]" />
       <DashboardCard
         title="Message templates"
         icon="writing-hand"
