@@ -13,7 +13,7 @@ export function TemplatesCard({ className }: { className?: string }) {
     <Link
       href="/templates"
       className={cn(
-        "group flex items-center gap-4 rounded-xl border border-white/[0.16] bg-background px-5 py-4 transition-colors hover:bg-white/[0.04]",
+        "group flex items-center gap-4 rounded-xl bg-background px-5 py-4 transition-colors hover:bg-white/[0.04]",
         className
       )}
     >
