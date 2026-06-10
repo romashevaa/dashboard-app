@@ -15,9 +15,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Credentials", href: "/credentials", icon: "lock" },
   { label: "Resources", href: "/resources", icon: "unicorn" },
   { label: "Members", href: "/members", icon: "technologist" },
-  { label: "Templates", href: "/templates", icon: "writing-hand" },
-  { label: "Events", href: "/events", icon: "calendar" },
-  { label: "Links", href: "/links", icon: "link" },
+  { label: "Message templates", href: "/templates", icon: "writing-hand" },
 ];
 
 /** Admin-only navigation, appended for users with the `admin` role. */

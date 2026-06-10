@@ -29,10 +29,14 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
     verifySignIn,
     verifyInit
   );
-  // Lets the user go back to the email step from the code step.
-  const [editingEmail, setEditingEmail] = useState(false);
+  // Tracks the address the user chose to "edit away from" on the code step.
+  // Derived (no effect) so the form still submits as a plain server action
+  // without client JS: once a *different* email is (re)sent, the code step
+  // shows again because reqState.email no longer matches.
+  const [editedEmail, setEditedEmail] = useState<string | null>(null);
 
-  const showCodeStep = reqState.status === "sent" && !editingEmail;
+  const showCodeStep =
+    reqState.status === "sent" && reqState.email !== editedEmail;
 
   // Step 2: code entry (the email also contains a clickable magic link).
   if (showCodeStep) {
@@ -94,7 +98,7 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
           <button
             type="button"
             className={linkButtonClass}
-            onClick={() => setEditingEmail(true)}
+            onClick={() => setEditedEmail(reqState.email ?? null)}
           >
             Use a different email
           </button>
@@ -105,13 +109,7 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
 
   // Step 1: email entry.
   return (
-    <form
-      action={(formData) => {
-        setEditingEmail(false);
-        requestAction(formData);
-      }}
-      className="flex flex-col gap-4"
-    >
+    <form action={requestAction} className="flex flex-col gap-4">
       <input type="hidden" name="redirectTo" value={redirectTo} />
 
       <div className="flex flex-col gap-2">
