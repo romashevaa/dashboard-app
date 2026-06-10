@@ -27,17 +27,17 @@ const FEATURED_NOTE =
 
 const FEATURED: Login[] = [
   { id: "wf-dev", service: "Webflow", account: "DevAccount", username: "dev-webflow", password: "dev-webflow-pw", url: "https://webflow.com" },
-  { id: "wf-pro", service: "Webflow", account: "ProAccount", username: "pro-webflow", password: "pro-webflow-pw" },
-  { id: "wf-hex", service: "Webflow", account: "HexAccount", username: "hex-webflow", password: "hex-webflow-pw" },
-  { id: "wf-hi", service: "Webflow", account: "HiWebfolks", username: "hi-webflow", password: "hi-webflow-pw" },
+  { id: "wf-pro", service: "Webflow", account: "ProAccount", username: "pro-webflow", password: "pro-webflow-pw", url: "https://webflow.com" },
+  { id: "wf-hex", service: "Webflow", account: "HexAccount", username: "hex-webflow", password: "hex-webflow-pw", url: "https://webflow.com" },
+  { id: "wf-hi", service: "Webflow", account: "HiWebfolks", username: "hi-webflow", password: "hi-webflow-pw", url: "https://webflow.com" },
 ];
 
 const ALL_LOGINS: Login[] = [
-  { id: "ui8", service: "UI8", username: "usernameforui", password: "ui8-pw" },
-  { id: "adobe", service: "Adobe Creative Cloud", username: "usernameforui", password: "adobe-pw", note: "Feel free to log out the oldest user." },
-  { id: "loom", service: "Loom", username: "loomuser", password: "loom-pw" },
-  { id: "webflow", service: "Webflow", username: "usernameforui", password: "webflow-pw" },
-  { id: "freepik", service: "Freepik", username: "freepickuser", password: "freepik-pw" },
+  { id: "ui8", service: "UI8", username: "usernameforui", password: "ui8-pw", url: "https://ui8.net" },
+  { id: "adobe", service: "Adobe Creative Cloud", username: "usernameforui", password: "adobe-pw", url: "https://adobe.com", note: "Feel free to log out the oldest user." },
+  { id: "loom", service: "Loom", username: "loomuser", password: "loom-pw", url: "https://loom.com" },
+  { id: "webflow", service: "Webflow", username: "usernameforui", password: "webflow-pw", url: "https://webflow.com" },
+  { id: "freepik", service: "Freepik", username: "freepickuser", password: "freepik-pw", url: "https://freepik.com" },
 ];
 
 function matches(login: Login, query: string) {
@@ -122,7 +122,7 @@ function CredentialTable({
         <span className="flex flex-1 items-center gap-1.5">
           <Lock className="size-4" aria-hidden /> Password
         </span>
-        <span className="w-24 shrink-0" />
+        <span className="w-28 shrink-0" />
       </div>
 
       <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-background">
@@ -146,14 +146,11 @@ function CredentialRow({
   useAccountLabel: boolean;
 }) {
   const serviceLabel = useAccountLabel ? login.account ?? login.service : login.service;
+  // Actions are revealed on hover (desktop); always visible on touch (mobile).
+  const onHover = "opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100";
 
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-3 border-b border-white/[0.06] px-3 py-3 last:border-b-0 md:flex-row md:items-center md:gap-4",
-        login.url && "bg-[#1c2254]"
-      )}
-    >
+    <div className="group flex flex-col gap-3 border-b border-white/[0.06] px-3 py-3 transition-colors last:border-b-0 hover:bg-accent md:flex-row md:items-center md:gap-4">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <ServiceIcon name={login.service} />
         <div className="min-w-0">
@@ -169,22 +166,25 @@ function CredentialRow({
       <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
         <User className="size-4 shrink-0 md:hidden" aria-hidden />
         <span className="truncate">{login.username}</span>
-        <CopyButton value={login.username} label="username" />
+        <CopyButton value={login.username} label="username" className={onHover} />
       </div>
 
       <div className="flex flex-1 items-center gap-2 text-sm text-muted-foreground">
         <Lock className="size-4 shrink-0 md:hidden" aria-hidden />
         <span className="tracking-widest">•••••••••••</span>
-        <CopyButton value={login.password} label="password" />
+        <CopyButton value={login.password} label="password" className={onHover} />
       </div>
 
-      <div className="shrink-0 md:w-24 md:text-right">
+      <div className="shrink-0 md:w-28 md:text-right">
         {login.url ? (
           <a
             href={login.url}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-md bg-surface px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-white"
+            className={cn(
+              "inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-surface px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-white",
+              onHover
+            )}
           >
             Open Site
             <ArrowUpRight className="size-4" aria-hidden />

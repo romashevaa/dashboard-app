@@ -3,11 +3,21 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+
 /**
  * Copies a value to the clipboard without revealing it on screen, showing a
  * brief confirmation. (Reveal/copy audit logging comes with the real data.)
  */
-export function CopyButton({ value, label }: { value: string; label: string }) {
+export function CopyButton({
+  value,
+  label,
+  className,
+}: {
+  value: string;
+  label: string;
+  className?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function onCopy() {
@@ -25,7 +35,10 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
       type="button"
       onClick={onCopy}
       aria-label={`Copy ${label}`}
-      className="shrink-0 text-muted-foreground transition-colors hover:text-white"
+      className={cn(
+        "shrink-0 text-muted-foreground transition-colors hover:text-white",
+        className
+      )}
     >
       {copied ? (
         <Check className="size-4 text-brand-light" aria-hidden />

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Greeting } from "@/components/layout/greeting";
+import { PageTitle } from "@/components/layout/page-title";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { getCurrentProfile } from "@/lib/auth/profile";
@@ -48,7 +48,7 @@ export default async function AppLayout({
         <div className="flex min-h-0 flex-1 flex-col gap-6 border-t border-white/10 bg-surface p-4 md:rounded-xl md:border md:p-6">
           <header className="flex items-center gap-3">
             <MobileNav isAdmin={isAdmin} />
-            <Greeting name={name} />
+            <PageTitle name={name} />
             <div className="flex shrink-0 items-center gap-2">
               <span
                 aria-hidden
