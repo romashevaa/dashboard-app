@@ -1,79 +1,60 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Sidebar } from "./sidebar";
 
+const TOGGLE_ID = "mobile-nav-toggle";
+
+function closeDrawer() {
+  const toggle = document.getElementById(TOGGLE_ID);
+  if (toggle instanceof HTMLInputElement) toggle.checked = false;
+}
+
 /**
- * Mobile-only navigation: a burger button that opens the Sidebar as an
- * off-canvas drawer with a backdrop. Hidden on md+ where the static rail shows.
+ * Mobile navigation drawer driven by a hidden checkbox + labels, so it opens
+ * and closes purely with HTML/CSS — no client JS required (important for
+ * environments where the page hasn't hydrated). When JS is available, clicking
+ * a nav link also closes the drawer; without JS the full-page navigation does.
+ * Hidden on md+ where the static rail shows.
  */
 export function MobileNav({ isAdmin = false }: { isAdmin?: boolean }) {
-  const [open, setOpen] = useState(false);
-
-  // While the drawer is open, close on Escape and lock background scrolling.
-  useEffect(() => {
-    if (!open) return;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
   return (
     <div className="md:hidden">
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        onClick={() => setOpen(true)}
+      <input
+        type="checkbox"
+        id={TOGGLE_ID}
+        className="peer sr-only"
+        aria-hidden
+        tabIndex={-1}
+      />
+
+      <label
+        htmlFor={TOGGLE_ID}
         aria-label="Open menu"
-        aria-expanded={open}
+        className="grid size-9 cursor-pointer place-items-center rounded-md border border-white/10 text-foreground transition-colors hover:bg-white/5"
       >
         <Menu className="size-5" aria-hidden />
-      </Button>
+      </label>
 
-      {open ? (
-        <div
-          className="fixed inset-0 z-50 md:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation menu"
+      {/* Backdrop */}
+      <label
+        htmlFor={TOGGLE_ID}
+        aria-label="Close menu"
+        className="invisible fixed inset-0 z-40 cursor-pointer bg-black/60 opacity-0 transition-opacity peer-checked:visible peer-checked:opacity-100"
+      />
+
+      {/* Drawer */}
+      <div className="fixed inset-y-0 left-0 z-50 w-full -translate-x-full bg-background shadow-xl transition-transform duration-200 ease-out peer-checked:translate-x-0">
+        <label
+          htmlFor={TOGGLE_ID}
+          aria-label="Close menu"
+          className="absolute right-4 top-5 grid size-9 cursor-pointer place-items-center rounded-md text-muted-foreground transition-colors hover:text-white"
         >
-          <button
-            type="button"
-            aria-label="Close menu"
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-black/60"
-          />
-          <div className="absolute inset-y-0 left-0 w-full bg-background shadow-xl">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setOpen(false)}
-              aria-label="Close menu"
-              className="absolute right-4 top-5 size-9 text-muted-foreground"
-            >
-              <X className="size-5" aria-hidden />
-            </Button>
-            <Sidebar
-              isAdmin={isAdmin}
-              onNavigate={() => setOpen(false)}
-              className="w-full"
-            />
-          </div>
-        </div>
-      ) : null}
+          <X className="size-5" aria-hidden />
+        </label>
+        <Sidebar isAdmin={isAdmin} className="w-full" onNavigate={closeDrawer} />
+      </div>
     </div>
   );
 }
