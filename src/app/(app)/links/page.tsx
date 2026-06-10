@@ -1,5 +1,11 @@
 import { SectionPlaceholder } from "@/components/section-placeholder";
 
 export default function LinksPage() {
-  return <SectionPlaceholder description="Doc, brand, and social links." />;
+  return (
+    <SectionPlaceholder
+      icon="link"
+      title="Links"
+      description="Doc, brand, and social links."
+    />
+  );
 }
