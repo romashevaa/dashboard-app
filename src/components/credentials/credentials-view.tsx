@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   Info,
   Lock,
+  Pencil,
   Plus,
   Search,
   Trash2,
@@ -14,7 +15,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { AddCredentialModal, type NewLogin } from "./add-credential-modal";
+import { CredentialModal, type CredentialDraft } from "./credential-modal";
 import { CopyButton } from "./copy-button";
 import { ServiceAvatar, faviconFor } from "./service-avatar";
 
@@ -76,7 +77,8 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
   const [serviceNotes, setServiceNotes] =
     useState<Record<string, string>>(SERVICE_NOTES);
   const [query, setQuery] = useState("");
-  const [adding, setAdding] = useState(false);
+  // null = closed, "new" = add, Login = edit that row.
+  const [editing, setEditing] = useState<Login | "new" | null>(null);
 
   const { groups, singles } = useMemo(() => {
     const filtered = logins.filter((l) => matches(l, query));
@@ -102,18 +104,26 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
 
   const remove = (id: string) => setLogins((ls) => ls.filter((l) => l.id !== id));
 
-  const add = (login: NewLogin, categoryNote?: string) => {
-    setLogins((ls) => [
-      ...ls,
-      {
-        ...login,
-        id: `c-${Date.now()}`,
-        iconUrl: login.iconUrl ?? (login.url ? faviconFor(login.url) : undefined),
-      },
-    ]);
-    if (categoryNote && categoryNote.trim()) {
-      setServiceNotes((prev) => ({ ...prev, [login.service]: categoryNote.trim() }));
+  const submit = (draft: CredentialDraft, categoryNote: string) => {
+    const iconUrl =
+      draft.iconUrl ?? (draft.url ? faviconFor(draft.url) : undefined);
+
+    if (editing && editing !== "new") {
+      const id = editing.id;
+      setLogins((ls) =>
+        ls.map((l) => (l.id === id ? { ...l, ...draft, iconUrl } : l))
+      );
+    } else {
+      setLogins((ls) => [...ls, { ...draft, id: `c-${Date.now()}`, iconUrl }]);
     }
+
+    setServiceNotes((prev) => {
+      const next = { ...prev };
+      if (categoryNote) next[draft.service] = categoryNote;
+      else delete next[draft.service];
+      return next;
+    });
+    setEditing(null);
   };
 
   const empty = groups.length === 0 && singles.length === 0;
@@ -157,7 +167,7 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
         {isAdmin ? (
           <Button
             type="button"
-            onClick={() => setAdding(true)}
+            onClick={() => setEditing("new")}
             className="h-12 shrink-0"
           >
             <Plus className="size-4" aria-hidden />
@@ -185,7 +195,13 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
                 </p>
               ) : null}
             </div>
-            <CredentialTable rows={rows} useAccountLabel isAdmin={isAdmin} onRemove={remove} />
+            <CredentialTable
+              rows={rows}
+              useAccountLabel
+              isAdmin={isAdmin}
+              onRemove={remove}
+              onEdit={setEditing}
+            />
           </section>
         );
       })}
@@ -193,7 +209,12 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
       {singles.length > 0 ? (
         <section className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold tracking-tight">All logins</h2>
-          <CredentialTable rows={singles} isAdmin={isAdmin} onRemove={remove} />
+          <CredentialTable
+            rows={singles}
+            isAdmin={isAdmin}
+            onRemove={remove}
+            onEdit={setEditing}
+          />
         </section>
       ) : null}
 
@@ -203,12 +224,17 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
         </p>
       ) : null}
 
-      {isAdmin ? (
-        <AddCredentialModal
-          open={adding}
-          onClose={() => setAdding(false)}
+      {isAdmin && editing !== null ? (
+        <CredentialModal
+          key={editing === "new" ? "new" : editing.id}
+          open
+          onClose={() => setEditing(null)}
           services={serviceNames}
-          onAdd={add}
+          initial={editing === "new" ? undefined : editing}
+          initialCategoryNote={
+            editing === "new" ? "" : serviceNotes[editing.service] ?? ""
+          }
+          onSubmit={submit}
         />
       ) : null}
     </div>
@@ -220,11 +246,13 @@ function CredentialTable({
   useAccountLabel = false,
   isAdmin = false,
   onRemove,
+  onEdit,
 }: {
   rows: Login[];
   useAccountLabel?: boolean;
   isAdmin?: boolean;
   onRemove: (id: string) => void;
+  onEdit: (login: Login) => void;
 }) {
   return (
     <div className="flex flex-col gap-3">
@@ -237,7 +265,7 @@ function CredentialTable({
         <span className="flex flex-1 items-center gap-1.5">
           <Lock className="size-4" aria-hidden /> Password
         </span>
-        <span className="w-28 shrink-0" />
+        <span className="w-40 shrink-0" />
       </div>
 
       <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-background">
@@ -248,6 +276,7 @@ function CredentialTable({
             useAccountLabel={useAccountLabel}
             isAdmin={isAdmin}
             onRemove={onRemove}
+            onEdit={onEdit}
           />
         ))}
       </div>
@@ -277,11 +306,13 @@ function CredentialRow({
   useAccountLabel,
   isAdmin,
   onRemove,
+  onEdit,
 }: {
   login: Login;
   useAccountLabel: boolean;
   isAdmin: boolean;
   onRemove: (id: string) => void;
+  onEdit: (login: Login) => void;
 }) {
   const serviceLabel = useAccountLabel ? login.account ?? login.service : login.service;
   // Below lg the rows stack into cards (actions always visible); at lg they
@@ -323,20 +354,33 @@ function CredentialRow({
         <CopyButton value={login.password} label="password" className={onHover} />
       </div>
 
-      <div className="flex shrink-0 items-center justify-end gap-2 lg:w-28">
+      <div className="flex shrink-0 items-center justify-end gap-2 lg:w-40">
         {login.url ? <OpenSiteLink url={login.url} className={cn("hidden lg:inline-flex", onHover)} /> : null}
         {isAdmin ? (
-          <button
-            type="button"
-            onClick={() => onRemove(login.id)}
-            aria-label={`Remove ${serviceLabel}`}
-            className={cn(
-              "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring/60",
-              onHover
-            )}
-          >
-            <Trash2 className="size-4" aria-hidden />
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => onEdit(login)}
+              aria-label={`Edit ${serviceLabel}`}
+              className={cn(
+                "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60",
+                onHover
+              )}
+            >
+              <Pencil className="size-4" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => onRemove(login.id)}
+              aria-label={`Remove ${serviceLabel}`}
+              className={cn(
+                "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring/60",
+                onHover
+              )}
+            >
+              <Trash2 className="size-4" aria-hidden />
+            </button>
+          </>
         ) : null}
       </div>
     </div>
