@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CredentialModal, type CredentialDraft } from "./credential-modal";
-import { CopyButton } from "./copy-button";
+import { CopyText } from "./copy-text";
 import { ServiceAvatar, faviconFor } from "./service-avatar";
 
 type Login = {
@@ -265,7 +265,7 @@ function CredentialTable({
         <span className="flex flex-1 items-center gap-1.5">
           <Lock className="size-4" aria-hidden /> Password
         </span>
-        <span className="w-40 shrink-0" />
+        {isAdmin ? <span className="w-16 shrink-0" /> : null}
       </div>
 
       <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-background">
@@ -281,23 +281,6 @@ function CredentialTable({
         ))}
       </div>
     </div>
-  );
-}
-
-function OpenSiteLink({ url, className }: { url: string; className?: string }) {
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noreferrer"
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md bg-surface px-2.5 py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60",
-        className
-      )}
-    >
-      Open Site
-      <ArrowUpRight className="size-4" aria-hidden />
-    </a>
   );
 }
 
@@ -317,72 +300,93 @@ function CredentialRow({
   const serviceLabel = useAccountLabel ? login.account ?? login.service : login.service;
   // Below lg the rows stack into cards (actions always visible); at lg they
   // become table columns where actions reveal on hover or keyboard focus.
-  const onHover =
+  const reveal =
     "opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100";
+
+  const serviceInner = (
+    <>
+      <ServiceAvatar
+        name={login.service}
+        iconUrl={login.iconUrl}
+        noIcon={login.noIcon}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-1 text-sm font-semibold text-foreground">
+          <span className="truncate">{serviceLabel}</span>
+          {login.url ? (
+            <ArrowUpRight
+              className={cn("size-3.5 shrink-0 text-muted-foreground", reveal)}
+              aria-hidden
+            />
+          ) : null}
+        </p>
+        {login.note ? (
+          <span className="flex items-center gap-1.5 text-xs text-accent-yellow">
+            <Info className="size-3.5 shrink-0" aria-hidden />
+            <span className="truncate">{login.note}</span>
+          </span>
+        ) : null}
+      </div>
+    </>
+  );
 
   return (
     <div className="group flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent focus-within:bg-accent lg:flex-row lg:items-center lg:gap-4 lg:px-3 lg:py-3">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <ServiceAvatar
-          name={login.service}
-          iconUrl={login.iconUrl}
-          noIcon={login.noIcon}
-        />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-foreground">
-            {serviceLabel}
-          </p>
-          {login.note ? (
-            <div className="flex items-center gap-1.5 text-xs text-accent-yellow">
-              <Info className="size-3.5 shrink-0" aria-hidden />
-              <span>{login.note}</span>
-            </div>
-          ) : null}
-        </div>
-        {login.url ? <OpenSiteLink url={login.url} className="lg:hidden" /> : null}
-      </div>
+      {login.url ? (
+        <a
+          href={login.url}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Open ${serviceLabel}`}
+          className="flex min-w-0 flex-1 items-center gap-2 rounded outline-none transition-colors hover:[&_p]:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+        >
+          {serviceInner}
+        </a>
+      ) : (
+        <div className="flex min-w-0 flex-1 items-center gap-2">{serviceInner}</div>
+      )}
 
       <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
         <User className="size-4 shrink-0 lg:hidden" aria-hidden />
-        <span className="truncate">{login.username}</span>
-        <CopyButton value={login.username} label="username" className={onHover} />
+        <CopyText value={login.username} label="username" iconClassName={reveal} />
       </div>
 
       <div className="flex flex-1 items-center gap-2 text-sm text-muted-foreground">
         <Lock className="size-4 shrink-0 lg:hidden" aria-hidden />
-        <span className="tracking-widest">•••••••••••</span>
-        <CopyButton value={login.password} label="password" className={onHover} />
+        <CopyText
+          value={login.password}
+          label="password"
+          display={<span className="tracking-widest">•••••••••••</span>}
+          iconClassName={reveal}
+        />
       </div>
 
-      <div className="flex shrink-0 items-center justify-end gap-2 lg:w-40">
-        {login.url ? <OpenSiteLink url={login.url} className={cn("hidden lg:inline-flex", onHover)} /> : null}
-        {isAdmin ? (
-          <>
-            <button
-              type="button"
-              onClick={() => onEdit(login)}
-              aria-label={`Edit ${serviceLabel}`}
-              className={cn(
-                "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60",
-                onHover
-              )}
-            >
-              <Pencil className="size-4" aria-hidden />
-            </button>
-            <button
-              type="button"
-              onClick={() => onRemove(login.id)}
-              aria-label={`Remove ${serviceLabel}`}
-              className={cn(
-                "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring/60",
-                onHover
-              )}
-            >
-              <Trash2 className="size-4" aria-hidden />
-            </button>
-          </>
-        ) : null}
-      </div>
+      {isAdmin ? (
+        <div className="flex shrink-0 items-center justify-end gap-3 lg:w-16">
+          <button
+            type="button"
+            onClick={() => onEdit(login)}
+            aria-label={`Edit ${serviceLabel}`}
+            className={cn(
+              "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60",
+              reveal
+            )}
+          >
+            <Pencil className="size-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            onClick={() => onRemove(login.id)}
+            aria-label={`Remove ${serviceLabel}`}
+            className={cn(
+              "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring/60",
+              reveal
+            )}
+          >
+            <Trash2 className="size-4" aria-hidden />
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
