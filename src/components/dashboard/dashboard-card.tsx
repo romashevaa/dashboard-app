@@ -1,4 +1,4 @@
-import { EmojiIcon } from "@/components/ui/emoji-icon";
+import { CardHeading } from "@/components/dashboard/card-heading";
 import { cn } from "@/lib/utils";
 
 /**
@@ -27,17 +27,7 @@ export function DashboardCard({
         className
       )}
     >
-      <div className="flex items-center gap-3">
-        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-white/[0.12]">
-          <EmojiIcon name={icon} size={24} />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-          {subtitle ? (
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
-          ) : null}
-        </div>
-      </div>
+      <CardHeading icon={icon} title={title} subtitle={subtitle} />
       {children}
     </section>
   );

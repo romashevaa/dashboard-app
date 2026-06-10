@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Lock, Search, User } from "lucide-react";
+import { ArrowUpRight, Lock, Search, User, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
@@ -69,6 +69,16 @@ export function CredentialsView() {
           aria-label="Search credentials"
           className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-white/40 md:text-sm"
         />
+        {query ? (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            aria-label="Clear search"
+            className="shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+        ) : null}
       </div>
 
       {featured.length > 0 ? (
@@ -151,7 +161,7 @@ function OpenSiteLink({
       target="_blank"
       rel="noreferrer"
       className={cn(
-        "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md bg-surface px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-white",
+        "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md bg-surface px-2.5 py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60",
         className
       )}
     >
@@ -170,12 +180,12 @@ function CredentialRow({
 }) {
   const serviceLabel = useAccountLabel ? login.account ?? login.service : login.service;
   // Below lg the rows stack into cards (actions always visible); at lg they
-  // become table columns where actions reveal on hover.
+  // become table columns where actions reveal on hover or keyboard focus.
   const onHover =
-    "opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100";
+    "opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100";
 
   return (
-    <div className="group flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent lg:flex-row lg:items-center lg:gap-4 lg:px-3 lg:py-3">
+    <div className="group flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent focus-within:bg-accent lg:flex-row lg:items-center lg:gap-4 lg:px-3 lg:py-3">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <ServiceIcon name={login.service} />
         <div className="min-w-0 flex-1">

@@ -35,8 +35,9 @@ export function CopyButton({
       type="button"
       onClick={onCopy}
       aria-label={`Copy ${label}`}
+      title={copied ? "Copied" : `Copy ${label}`}
       className={cn(
-        "shrink-0 text-muted-foreground transition-colors hover:text-white",
+        "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60",
         className
       )}
     >
