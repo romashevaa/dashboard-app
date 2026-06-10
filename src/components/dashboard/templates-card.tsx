@@ -13,11 +13,11 @@ export function TemplatesCard({ className }: { className?: string }) {
     <Link
       href="/templates"
       className={cn(
-        "group flex items-center gap-4 rounded-xl bg-background px-5 py-4 transition-colors hover:bg-white/[0.04]",
+        "group flex items-center gap-4 rounded-xl bg-background px-5 py-4 transition-colors hover:bg-accent",
         className
       )}
     >
-      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-white/[0.12]">
+      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-white/[0.12] transition-colors group-hover:bg-white/20">
         <EmojiIcon name="writing-hand" size={24} />
       </span>
       <div className="min-w-0">
