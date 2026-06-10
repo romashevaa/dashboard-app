@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Copy, Lock, User } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { EmojiIcon } from "@/components/ui/emoji-icon";
 import { cn } from "@/lib/utils";
@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 /**
  * Dashboard Credentials teaser (Figma node 246:4275 / 920:7753). A clickable
  * card that links to the full Credentials section; on hover the gradient
- * brightens and an arrow appears. The preview is intentionally obscured
- * (redacted service, masked password) — real data is wired up with the
- * Credentials feature.
+ * brightens and an arrow appears. The obscured preview is the official
+ * public/creds.svg asset so it scales as a single unit — real data is wired up
+ * with the Credentials feature.
  */
 export function CredentialsCard({ className }: { className?: string }) {
   return (
@@ -40,29 +40,16 @@ export function CredentialsCard({ className }: { className?: string }) {
         </div>
       </div>
 
-      {/* Obscured preview — the rows grow to fill the card, bleed off the
-          right edge, and clip at the bottom. */}
-      <div className="min-h-0 flex-1 pl-5">
-        <div className="flex h-full flex-col rounded-tl-lg border border-white/5 bg-white/[0.04]">
-          <div className="flex flex-1 items-center gap-3.5 px-5 py-4">
-            <span className="size-8 shrink-0 rounded-full bg-white/10" />
-            <span className="h-2.5 w-32 rounded-full bg-gradient-to-r from-white/25 to-transparent" />
-          </div>
-          <div className="flex flex-1 items-center justify-between gap-3 border-y border-white/5 px-5 py-4">
-            <span className="flex min-w-0 items-center gap-2.5 text-base text-white/70">
-              <User className="size-5 shrink-0" aria-hidden />
-              <span className="truncate">webflowproaccount</span>
-            </span>
-            <Copy className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-          </div>
-          <div className="flex flex-1 items-center justify-between gap-3 px-5 py-4">
-            <span className="flex items-center gap-2.5 text-base tracking-widest text-white/70">
-              <Lock className="size-5 shrink-0" aria-hidden />
-              •••••••••••
-            </span>
-            <Copy className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-          </div>
-        </div>
+      {/* Obscured preview (public/creds.svg). Fills the card and bleeds off the
+          right/bottom edges on desktop; shows in full on narrow screens. */}
+      <div className="min-h-0 flex-1 overflow-hidden pl-5 max-lg:aspect-[377/172]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/creds.svg"
+          alt=""
+          aria-hidden
+          className="size-full max-w-none rounded-tl-lg object-cover object-left-top"
+        />
       </div>
     </Link>
   );
