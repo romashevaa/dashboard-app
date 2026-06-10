@@ -14,6 +14,8 @@ export type NewLogin = {
   url?: string;
   iconUrl?: string;
   noIcon?: boolean;
+  /** Per-item note, rendered in brand yellow. */
+  note?: string;
 };
 
 const inputClass =
@@ -49,7 +51,7 @@ export function AddCredentialModal({
   onClose: () => void;
   /** Existing service names, offered for grouping. */
   services: string[];
-  onAdd: (login: NewLogin) => void;
+  onAdd: (login: NewLogin, categoryNote?: string) => void;
 }) {
   const listId = useId();
   const [service, setService] = useState("");
@@ -58,6 +60,8 @@ export function AddCredentialModal({
   const [password, setPassword] = useState("");
   const [url, setUrl] = useState("");
   const [noIcon, setNoIcon] = useState(false);
+  const [note, setNote] = useState("");
+  const [categoryNote, setCategoryNote] = useState("");
 
   const iconUrl = noIcon ? undefined : faviconFor(url);
   const canSubmit =
@@ -70,20 +74,26 @@ export function AddCredentialModal({
     setPassword("");
     setUrl("");
     setNoIcon(false);
+    setNote("");
+    setCategoryNote("");
   }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!canSubmit) return;
-    onAdd({
-      service: service.trim(),
-      account: account.trim() || undefined,
-      username: username.trim(),
-      password,
-      url: url.trim() || undefined,
-      iconUrl,
-      noIcon,
-    });
+    onAdd(
+      {
+        service: service.trim(),
+        account: account.trim() || undefined,
+        username: username.trim(),
+        password,
+        url: url.trim() || undefined,
+        iconUrl,
+        noIcon,
+        note: note.trim() || undefined,
+      },
+      categoryNote.trim() || undefined
+    );
     reset();
     onClose();
   }
@@ -169,6 +179,27 @@ export function AddCredentialModal({
           />
           Use a letter instead of a website icon
         </label>
+
+        <Field label="Note for this login" hint="Optional — shown in yellow on this row.">
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="e.g. Log out the oldest user"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field
+          label="Note for the whole category"
+          hint="Optional — shown under the service heading (yellow)."
+        >
+          <input
+            value={categoryNote}
+            onChange={(e) => setCategoryNote(e.target.value)}
+            placeholder="e.g. Ask in #shared-creds before logging in"
+            className={inputClass}
+          />
+        </Field>
 
         <div className="mt-1 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>

@@ -1,7 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Lock, Plus, Search, Trash2, User, X } from "lucide-react";
+import {
+  ArrowUpRight,
+  Info,
+  Lock,
+  Plus,
+  Search,
+  Trash2,
+  User,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -64,6 +73,8 @@ function matches(login: Login, query: string) {
 
 export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
   const [logins, setLogins] = useState<Login[]>(INITIAL);
+  const [serviceNotes, setServiceNotes] =
+    useState<Record<string, string>>(SERVICE_NOTES);
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
 
@@ -91,7 +102,7 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
 
   const remove = (id: string) => setLogins((ls) => ls.filter((l) => l.id !== id));
 
-  const add = (login: NewLogin) =>
+  const add = (login: NewLogin, categoryNote?: string) => {
     setLogins((ls) => [
       ...ls,
       {
@@ -100,6 +111,10 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
         iconUrl: login.iconUrl ?? (login.url ? faviconFor(login.url) : undefined),
       },
     ]);
+    if (categoryNote && categoryNote.trim()) {
+      setServiceNotes((prev) => ({ ...prev, [login.service]: categoryNote.trim() }));
+    }
+  };
 
   const empty = groups.length === 0 && singles.length === 0;
 
@@ -125,13 +140,25 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
             >
               <X className="size-4" aria-hidden />
             </button>
-          ) : null}
+          ) : (
+            <div
+              aria-hidden
+              className="hidden shrink-0 items-center gap-1 sm:flex"
+            >
+              <kbd className="rounded border border-white/[0.12] bg-surface px-1.5 py-0.5 text-xs text-muted-foreground">
+                ⌘
+              </kbd>
+              <kbd className="rounded border border-white/[0.12] bg-surface px-1.5 py-0.5 text-xs text-muted-foreground">
+                F
+              </kbd>
+            </div>
+          )}
         </div>
         {isAdmin ? (
           <Button
             type="button"
             onClick={() => setAdding(true)}
-            className="h-12 shrink-0 sm:h-10"
+            className="h-12 shrink-0"
           >
             <Plus className="size-4" aria-hidden />
             Add credential
@@ -152,9 +179,9 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
                 />
                 <h2 className="text-lg font-semibold tracking-tight">{service}</h2>
               </div>
-              {SERVICE_NOTES[service] ? (
+              {serviceNotes[service] ? (
                 <p className="text-sm font-medium text-accent-yellow">
-                  {SERVICE_NOTES[service]}
+                  {serviceNotes[service]}
                 </p>
               ) : null}
             </div>
@@ -275,7 +302,10 @@ function CredentialRow({
             {serviceLabel}
           </p>
           {login.note ? (
-            <p className="text-xs text-accent-yellow">{login.note}</p>
+            <div className="flex items-center gap-1.5 text-xs text-accent-yellow">
+              <Info className="size-3.5 shrink-0" aria-hidden />
+              <span>{login.note}</span>
+            </div>
           ) : null}
         </div>
         {login.url ? <OpenSiteLink url={login.url} className="lg:hidden" /> : null}

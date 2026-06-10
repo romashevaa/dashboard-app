@@ -38,7 +38,7 @@ export function RoleForm({
           </option>
         ))}
       </select>
-      <Button type="submit" size="sm" variant="outline" disabled={pending || isSelf}>
+      <Button type="submit" variant="outline" disabled={pending || isSelf}>
         {pending ? "Saving…" : "Save"}
       </Button>
       {state.error ? (
