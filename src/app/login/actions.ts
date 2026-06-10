@@ -33,7 +33,6 @@ export async function requestSignIn(
   formData: FormData
 ): Promise<RequestState> {
   const email = String(formData.get("email") ?? "").trim();
-  const redirectTo = sanitizeRedirect(String(formData.get("redirectTo") ?? "/"));
 
   if (!email) {
     return { status: "error", message: "Enter your work email address." };
@@ -53,9 +52,10 @@ export async function requestSignIn(
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?redirectTo=${encodeURIComponent(
-        redirectTo
-      )}`,
+      // Must match an allowed redirect URL exactly (no extra query string),
+      // otherwise Supabase falls back to the site URL and the code is never
+      // exchanged. The code-entry path below still honors redirectTo.
+      emailRedirectTo: `${origin}/auth/callback`,
     },
   });
 
