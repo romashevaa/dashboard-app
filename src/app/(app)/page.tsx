@@ -3,44 +3,45 @@ import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { TemplatesCard } from "@/components/dashboard/templates-card";
 
 /**
- * Dashboard skeleton, laid out on a 3-column × 10-row grid (each row = 10% of
- * the panel height) so areas can use 40/60 height splits, with 32px (gap-8)
- * gaps:
+ * Dashboard. Responsive:
+ *   - base:  single column, compact cards (icon + title + subtitle)
+ *   - md:    two columns
+ *   - lg:    the Figma 3-column × 10-row layout, where cards reveal their
+ *            visuals and use 40/60 height splits.
  *
- *   col 1: Time off (40%, spans cols 1-2)  | Agency onboarding (60%)
- *   col 2: Time off (40%)                  | Credentials (fills) + Templates (content)
- *   col 3: Agency events (60%)             | Resources (40%)
- *
- * Cards are headings only for now; content is added per feature.
+ * The Credentials + Templates pair uses `display: contents` below lg so each
+ * flows as its own card, then groups into the center column at lg.
  */
 export default function OverviewPage() {
   return (
-    <div className="grid grid-cols-1 gap-8 lg:h-full lg:grid-cols-3 lg:grid-rows-[repeat(10,minmax(0,1fr))]">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:h-full lg:grid-cols-3 lg:grid-rows-[repeat(10,minmax(0,1fr))] lg:gap-8">
       <DashboardCard
         title="Time off"
+        subtitle="Days off, sick leave & vacation"
         icon="palmtree"
         className="lg:col-span-2 lg:row-span-[4]"
       />
       <DashboardCard
         title="Agency events"
+        subtitle="Upcoming holidays & events"
         icon="calendar"
         className="lg:col-start-3 lg:row-start-1 lg:row-span-[6]"
       />
       <DashboardCard
         title="Agency onboarding"
+        subtitle="Salary, time tracking & more"
         icon="page"
         className="lg:col-start-1 lg:row-start-[5] lg:row-span-[6]"
       />
 
-      {/* Center-lower column: Credentials fills the space, Templates hugs its
-          content. */}
-      <div className="flex flex-col gap-8 lg:col-start-2 lg:row-start-[5] lg:row-span-[6]">
-        <CredentialsCard className="min-h-0 flex-1" />
+      <div className="contents lg:col-start-2 lg:row-start-[5] lg:row-span-[6] lg:flex lg:flex-col lg:gap-8">
+        <CredentialsCard className="lg:min-h-0 lg:flex-1" />
         <TemplatesCard />
       </div>
 
       <DashboardCard
         title="Resources"
+        subtitle="Tools & learning library"
         icon="unicorn"
         className="lg:col-start-3 lg:row-start-[7] lg:row-span-[4]"
       />

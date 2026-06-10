@@ -17,7 +17,7 @@ export function CredentialsCard({ className }: { className?: string }) {
       href="/credentials"
       aria-label="Credentials — all shared accounts in one place"
       className={cn(
-        "group relative flex flex-col gap-5 overflow-hidden rounded-xl border border-white/[0.16] bg-gradient-to-b from-[#17238c] to-[#111a68] pt-5 transition-colors hover:from-[#2030c1] hover:to-[#152184]",
+        "group relative flex flex-col gap-5 overflow-hidden rounded-xl border border-white/[0.16] bg-gradient-to-b from-[#17238c] to-[#111a68] py-5 transition-colors hover:from-[#2030c1] hover:to-[#152184] lg:pb-0",
         className
       )}
     >
@@ -34,15 +34,16 @@ export function CredentialsCard({ className }: { className?: string }) {
               <ArrowRight className="size-3 text-white" aria-hidden />
             </span>
           </div>
-          <p className="truncate text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             All shared accounts in one place
           </p>
         </div>
       </div>
 
-      {/* Obscured preview (public/creds.svg). Fills the card and bleeds off the
-          right/bottom edges on desktop; shows in full on narrow screens. */}
-      <div className="min-h-0 flex-1 overflow-hidden pl-5 max-lg:aspect-[377/172]">
+      {/* Obscured preview (public/creds.svg) — desktop only. It fills the card
+          and bleeds off the right/bottom edges. Hidden below lg so smaller
+          screens show just the icon/title/subtitle. */}
+      <div className="hidden min-h-0 flex-1 overflow-hidden pl-5 lg:block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/creds.svg"

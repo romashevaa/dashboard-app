@@ -29,7 +29,7 @@ export function TemplatesCard({ className }: { className?: string }) {
             <ArrowRight className="size-3 text-white" aria-hidden />
           </span>
         </div>
-        <p className="truncate text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Copy, adjust, send!
         </p>
       </div>
