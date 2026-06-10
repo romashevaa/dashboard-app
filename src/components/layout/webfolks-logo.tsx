@@ -1,10 +1,20 @@
+"use client";
+
+import { useId } from "react";
+
 import { cn } from "@/lib/utils";
 
 /**
  * Official Webfolks brand lockup (mark + wordmark), inlined from
  * public/webfolks.svg so it scales crisply and inherits sizing via className.
+ *
+ * The gradient id is made unique per instance (useId) so multiple lockups on
+ * the page — e.g. the desktop rail and the mobile drawer — don't collide,
+ * which would leave the mark unpainted.
  */
 export function WebfolksLogo({ className }: { className?: string }) {
+  const gradientId = `wf-mark-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+
   return (
     <svg
       viewBox="0 0 113 24"
@@ -19,7 +29,7 @@ export function WebfolksLogo({ className }: { className?: string }) {
       />
       <path
         d="M7.47482 4.5L0 11.625L7.47482 18.75L17.4413 9.25L22.4245 14L24.9161 11.625L17.4413 4.5L7.47482 14L4.98322 11.625L9.96643 6.875L7.47482 4.5Z"
-        fill="url(#wf-mark-gradient)"
+        fill={`url(#${gradientId})`}
       />
       <path
         d="M33.8939 17.7332L29.4463 5.26813H32.5074L35.1362 13.5485L37.6391 5.26813H39.9079L42.4107 13.5485L45.0397 5.26813H48.1007L43.6532 17.7332H41.2763L38.7735 9.89799L36.2706 17.7332H33.8939Z"
@@ -52,7 +62,7 @@ export function WebfolksLogo({ className }: { className?: string }) {
       />
       <defs>
         <linearGradient
-          id="wf-mark-gradient"
+          id={gradientId}
           x1="6.12521"
           y1="18.75"
           x2="24.6613"

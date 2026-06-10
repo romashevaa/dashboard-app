@@ -1,5 +1,6 @@
 import { CredentialsCard } from "@/components/dashboard/credentials-card";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
+import { TemplatesCard } from "@/components/dashboard/templates-card";
 
 /**
  * Dashboard skeleton, laid out on a 3-column × 10-row grid (each row = 10% of
@@ -14,7 +15,7 @@ import { DashboardCard } from "@/components/dashboard/dashboard-card";
  */
 export default function OverviewPage() {
   return (
-    <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-3 lg:grid-rows-[repeat(10,minmax(0,1fr))]">
+    <div className="grid grid-cols-1 gap-8 lg:h-full lg:grid-cols-3 lg:grid-rows-[repeat(10,minmax(0,1fr))]">
       <DashboardCard
         title="Time off"
         icon="palmtree"
@@ -30,12 +31,8 @@ export default function OverviewPage() {
         icon="page"
         className="lg:col-start-1 lg:row-start-[5] lg:row-span-[6]"
       />
-      <CredentialsCard className="lg:col-start-2 lg:row-start-[5] lg:row-span-[3]" />
-      <DashboardCard
-        title="Message templates"
-        icon="writing-hand"
-        className="lg:col-start-2 lg:row-start-[8] lg:row-span-[3]"
-      />
+      <CredentialsCard className="lg:col-start-2 lg:row-start-[5] lg:row-span-[4]" />
+      <TemplatesCard className="lg:col-start-2 lg:row-start-[9] lg:row-span-[2]" />
       <DashboardCard
         title="Resources"
         icon="unicorn"

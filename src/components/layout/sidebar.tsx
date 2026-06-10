@@ -85,10 +85,8 @@ export function Sidebar({
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg p-2.5 text-base font-medium transition-colors",
-                  active
-                    ? "bg-white/10 text-white"
-                    : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                  "flex items-center gap-3 rounded-lg p-2.5 text-base font-medium text-white transition-colors",
+                  active ? "bg-white/10" : "text-white/90 hover:bg-white/5"
                 )}
               >
                 <EmojiIcon name={item.icon} size={22} />

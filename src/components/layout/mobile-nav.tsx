@@ -55,18 +55,22 @@ export function MobileNav({ isAdmin = false }: { isAdmin?: boolean }) {
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-black/60"
           />
-          <div className="absolute inset-y-0 left-0 w-64 bg-background shadow-xl">
+          <div className="absolute inset-y-0 left-0 w-full bg-background shadow-xl">
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={() => setOpen(false)}
               aria-label="Close menu"
-              className="absolute right-3 top-5 size-8 text-muted-foreground"
+              className="absolute right-4 top-5 size-9 text-muted-foreground"
             >
               <X className="size-5" aria-hidden />
             </Button>
-            <Sidebar isAdmin={isAdmin} onNavigate={() => setOpen(false)} />
+            <Sidebar
+              isAdmin={isAdmin}
+              onNavigate={() => setOpen(false)}
+              className="w-full"
+            />
           </div>
         </div>
       ) : null}
