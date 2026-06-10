@@ -59,7 +59,7 @@ export function CredentialsView() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex h-12 items-center gap-2 rounded-lg border border-white/[0.06] bg-background px-4">
+      <div className="flex h-12 items-center gap-2 rounded-lg border border-white/[0.06] bg-background px-4 transition-colors focus-within:border-ring/60">
         <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
         <input
           type="search"
@@ -113,8 +113,8 @@ function CredentialTable({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      {/* Column headers (desktop only) */}
-      <div className="hidden gap-4 px-3 text-xs font-semibold uppercase tracking-wider text-white/40 md:flex">
+      {/* Column headers — only the wide (lg) table layout uses them. */}
+      <div className="hidden gap-4 px-3 text-xs font-semibold uppercase tracking-wider text-white/40 lg:flex">
         <span className="flex-1">Service</span>
         <span className="flex flex-1 items-center gap-1.5">
           <User className="size-4" aria-hidden /> User name
@@ -138,6 +138,29 @@ function CredentialTable({
   );
 }
 
+function OpenSiteLink({
+  url,
+  className,
+}: {
+  url: string;
+  className?: string;
+}) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md bg-surface px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-white",
+        className
+      )}
+    >
+      Open Site
+      <ArrowUpRight className="size-4" aria-hidden />
+    </a>
+  );
+}
+
 function CredentialRow({
   login,
   useAccountLabel,
@@ -146,14 +169,16 @@ function CredentialRow({
   useAccountLabel: boolean;
 }) {
   const serviceLabel = useAccountLabel ? login.account ?? login.service : login.service;
-  // Actions are revealed on hover (desktop); always visible on touch (mobile).
-  const onHover = "opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100";
+  // Below lg the rows stack into cards (actions always visible); at lg they
+  // become table columns where actions reveal on hover.
+  const onHover =
+    "opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100";
 
   return (
-    <div className="group flex flex-col gap-3 border-b border-white/[0.06] px-3 py-3 transition-colors last:border-b-0 hover:bg-accent md:flex-row md:items-center md:gap-4">
+    <div className="group flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent lg:flex-row lg:items-center lg:gap-4 lg:px-3 lg:py-3">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <ServiceIcon name={login.service} />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-foreground">
             {serviceLabel}
           </p>
@@ -161,35 +186,25 @@ function CredentialRow({
             <p className="text-xs text-accent-yellow">{login.note}</p>
           ) : null}
         </div>
+        {/* Open Site sits in the card header on the stacked layout. */}
+        {login.url ? <OpenSiteLink url={login.url} className="lg:hidden" /> : null}
       </div>
 
       <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
-        <User className="size-4 shrink-0 md:hidden" aria-hidden />
+        <User className="size-4 shrink-0 lg:hidden" aria-hidden />
         <span className="truncate">{login.username}</span>
         <CopyButton value={login.username} label="username" className={onHover} />
       </div>
 
       <div className="flex flex-1 items-center gap-2 text-sm text-muted-foreground">
-        <Lock className="size-4 shrink-0 md:hidden" aria-hidden />
+        <Lock className="size-4 shrink-0 lg:hidden" aria-hidden />
         <span className="tracking-widest">•••••••••••</span>
         <CopyButton value={login.password} label="password" className={onHover} />
       </div>
 
-      <div className="shrink-0 md:w-28 md:text-right">
-        {login.url ? (
-          <a
-            href={login.url}
-            target="_blank"
-            rel="noreferrer"
-            className={cn(
-              "inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-surface px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-white",
-              onHover
-            )}
-          >
-            Open Site
-            <ArrowUpRight className="size-4" aria-hidden />
-          </a>
-        ) : null}
+      {/* Open Site as the trailing column in the lg table layout. */}
+      <div className="hidden shrink-0 lg:block lg:w-28 lg:text-right">
+        {login.url ? <OpenSiteLink url={login.url} className={onHover} /> : null}
       </div>
     </div>
   );
