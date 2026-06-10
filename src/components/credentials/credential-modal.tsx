@@ -190,7 +190,7 @@ export function CredentialModal({
 
         {showNotes ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Note for this login" hint="yellow, on the row">
+            <Field label="Note for this login">
               <input
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
