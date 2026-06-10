@@ -40,27 +40,27 @@ export function CredentialsCard({ className }: { className?: string }) {
         </div>
       </div>
 
-      {/* Obscured preview — fills the card, bleeds off the right edge, and
-          clips at the bottom. */}
+      {/* Obscured preview — the rows grow to fill the card, bleed off the
+          right edge, and clip at the bottom. */}
       <div className="min-h-0 flex-1 pl-5">
         <div className="flex h-full flex-col rounded-tl-lg border border-white/5 bg-white/[0.04]">
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <span className="size-6 shrink-0 rounded-full bg-white/10" />
-            <span className="h-2 w-28 rounded-full bg-gradient-to-r from-white/25 to-transparent" />
+          <div className="flex flex-1 items-center gap-3.5 px-5 py-4">
+            <span className="size-8 shrink-0 rounded-full bg-white/10" />
+            <span className="h-2.5 w-32 rounded-full bg-gradient-to-r from-white/25 to-transparent" />
           </div>
-          <div className="flex items-center justify-between gap-3 border-y border-white/5 px-4 py-3">
-            <span className="flex min-w-0 items-center gap-2 text-sm text-white/70">
-              <User className="size-4 shrink-0" aria-hidden />
+          <div className="flex flex-1 items-center justify-between gap-3 border-y border-white/5 px-5 py-4">
+            <span className="flex min-w-0 items-center gap-2.5 text-base text-white/70">
+              <User className="size-5 shrink-0" aria-hidden />
               <span className="truncate">webflowproaccount</span>
             </span>
-            <Copy className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <Copy className="size-5 shrink-0 text-muted-foreground" aria-hidden />
           </div>
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <span className="flex items-center gap-2 text-sm tracking-widest text-white/70">
-              <Lock className="size-4 shrink-0" aria-hidden />
+          <div className="flex flex-1 items-center justify-between gap-3 px-5 py-4">
+            <span className="flex items-center gap-2.5 text-base tracking-widest text-white/70">
+              <Lock className="size-5 shrink-0" aria-hidden />
               •••••••••••
             </span>
-            <Copy className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <Copy className="size-5 shrink-0 text-muted-foreground" aria-hidden />
           </div>
         </div>
       </div>
