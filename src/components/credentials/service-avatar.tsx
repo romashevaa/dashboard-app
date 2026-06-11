@@ -31,7 +31,10 @@ export function ServiceAvatar({
     <span
       aria-hidden
       className={cn(
-        "grid size-6 shrink-0 place-items-center overflow-hidden rounded bg-white/10 text-xs font-bold text-white",
+        "grid size-6 shrink-0 place-items-center overflow-hidden rounded text-xs font-bold text-white",
+        // Background only behind the letter fallback — behind an icon it shows
+        // through transparent corners (e.g. circular favicons) as a grey box.
+        !showIcon && "bg-white/10",
         className
       )}
     >
