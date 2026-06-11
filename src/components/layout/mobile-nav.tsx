@@ -10,7 +10,15 @@ import { Sidebar } from "./sidebar";
  * Mobile-only navigation: a burger button that opens the Sidebar as a
  * full-width drawer with a backdrop. Hidden on md+ where the static rail shows.
  */
-export function MobileNav({ isAdmin = false }: { isAdmin?: boolean }) {
+export function MobileNav({
+  isAdmin = false,
+  isRealAdmin = false,
+  previewingAsMember = false,
+}: {
+  isAdmin?: boolean;
+  isRealAdmin?: boolean;
+  previewingAsMember?: boolean;
+}) {
   const [open, setOpen] = useState(false);
 
   // While the drawer is open, close on Escape and lock background scrolling.
@@ -68,6 +76,8 @@ export function MobileNav({ isAdmin = false }: { isAdmin?: boolean }) {
             </Button>
             <Sidebar
               isAdmin={isAdmin}
+              isRealAdmin={isRealAdmin}
+              previewingAsMember={previewingAsMember}
               onNavigate={() => setOpen(false)}
               className="w-full"
             />

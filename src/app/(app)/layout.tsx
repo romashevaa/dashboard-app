@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PageTitle } from "@/components/layout/page-title";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { getViewerContext } from "@/lib/auth/profile";
 import type { Profile } from "@/lib/db/types";
 
 function displayName(profile: Profile): string {
@@ -31,23 +31,32 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const profile = await getCurrentProfile();
+  const { profile, isAdmin, isRealAdmin, previewingAsMember } =
+    await getViewerContext();
 
   if (!profile) {
     redirect("/login");
   }
 
-  const isAdmin = profile.role === "admin";
   const name = displayName(profile);
 
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
-      <Sidebar isAdmin={isAdmin} className="hidden md:flex" />
+      <Sidebar
+        isAdmin={isAdmin}
+        isRealAdmin={isRealAdmin}
+        previewingAsMember={previewingAsMember}
+        className="hidden md:flex"
+      />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col md:py-2 md:pr-2">
         <div className="flex min-h-0 flex-1 flex-col gap-6 border-t border-white/10 bg-surface p-4 md:rounded-xl md:border md:p-6">
           <header className="flex items-center gap-3">
-            <MobileNav isAdmin={isAdmin} />
+            <MobileNav
+              isAdmin={isAdmin}
+              isRealAdmin={isRealAdmin}
+              previewingAsMember={previewingAsMember}
+            />
             <PageTitle name={name} />
             <div className="flex shrink-0 items-center gap-2">
               <span

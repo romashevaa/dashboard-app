@@ -8,6 +8,7 @@ import { Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV_ITEM, NAV_ITEMS } from "@/lib/nav";
 import { EmojiIcon } from "@/components/ui/emoji-icon";
+import { AdminPreviewToggle } from "./admin-preview-toggle";
 import { WebfolksLogo } from "./webfolks-logo";
 
 function isActive(pathname: string, href: string) {
@@ -52,10 +53,16 @@ const SOCIALS: { label: string; href: string; icon: ComponentType<IconProps> }[]
 
 export function Sidebar({
   isAdmin = false,
+  isRealAdmin = false,
+  previewingAsMember = false,
   className,
   onNavigate,
 }: {
+  /** Effective admin flag (false while a real admin previews as member). */
   isAdmin?: boolean;
+  /** The user's actual role is admin — gates the preview toggle itself. */
+  isRealAdmin?: boolean;
+  previewingAsMember?: boolean;
   className?: string;
   /** Called when a nav link is clicked — used to close the mobile drawer. */
   onNavigate?: () => void;
@@ -97,19 +104,25 @@ export function Sidebar({
         </nav>
       </div>
 
-      <div className="flex items-center gap-2 px-5">
-        {SOCIALS.map(({ label, href, icon: Icon }) => (
-          <a
-            key={label}
-            href={href}
-            aria-label={label}
-            target="_blank"
-            rel="noreferrer"
-            className="grid size-8 place-items-center rounded bg-surface text-muted-foreground transition-colors hover:text-white"
-          >
-            <Icon className="size-4" aria-hidden />
-          </a>
-        ))}
+      <div className="flex flex-col gap-4 px-5">
+        {isRealAdmin ? (
+          <AdminPreviewToggle previewingAsMember={previewingAsMember} />
+        ) : null}
+
+        <div className="flex items-center gap-2">
+          {SOCIALS.map(({ label, href, icon: Icon }) => (
+            <a
+              key={label}
+              href={href}
+              aria-label={label}
+              target="_blank"
+              rel="noreferrer"
+              className="grid size-8 place-items-center rounded bg-surface text-muted-foreground transition-colors hover:text-white"
+            >
+              <Icon className="size-4" aria-hidden />
+            </a>
+          ))}
+        </div>
       </div>
     </aside>
   );
