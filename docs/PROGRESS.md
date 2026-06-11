@@ -38,38 +38,45 @@ Run it: see `docs/RUNNING.md` (`pnpm db:start` needs Docker; then copy
   feature). Visuals hidden below lg.
 - **Login** — darker (surface) bg, WebFolks logo (`public/webfolks.svg`, inlined
   in `WebfolksLogo`).
+- **Credentials** (`/credentials`) — now backed by Postgres (see below).
 
-## Done (FIRST PASS — client state, NOT persisted)
+## Credentials (real backend)
 
-**Credentials page** (`/credentials`, `src/components/credentials/*`). Resets on
-reload — there is **no backend for it yet**.
+Migration `supabase/migrations/20260611120000_credentials_services_audit.sql`:
 
-- Grouping: logins grouped by service; a service with ≥2 logins becomes its own
-  section, singles go to "All logins".
-- Search (+ clear), service notes (category) and per-item notes (yellow, with ⓘ).
-- Service name is the link to the site (↗ on hover); click-to-copy username/
-  password (`CopyText`); admin edit (pencil) + remove (trash) on hover.
-- Admin add/edit via a centered `CredentialModal` (`Modal`): service (datalist
-  for grouping), account label, username, password, URL → favicon auto
-  (`ServiceAvatar` + `faviconFor`, Google s2 favicons) with "use a letter"
-  fallback; notes behind "+ Add a note".
-  - Sandbox note: the favicon host is blocked here, so screenshots show the
-    letter fallback; it loads real icons in a normal environment.
+- **`services`** (name, url, icon_url, no_icon, category_note) — one row per
+  tool/site; unique on `lower(name)`. **`credentials`** (service_id, account,
+  username, password, note) — password is **plain text by design** (`CLAUDE.md`;
+  encryption deferred). **`audit_logs`** (actor, action, entity, metadata).
+- **RLS:** read = any authenticated user (open visibility, matches the Doc);
+  write = **admins only**. Audit logs are admin-readable. Inserts to audit_logs
+  go through `record_audit_event()` (SECURITY DEFINER — forces actor =
+  `auth.uid()`, so it can't be spoofed and needs no broad INSERT grant).
+- **Server actions** (`src/lib/credentials/actions.ts`): `createCredential`,
+  `updateCredential`, `deleteCredential` (admin-gated via `requireAdmin`,
+  `revalidatePath('/credentials')`), `logCredentialReveal` (any signed-in user,
+  on password copy). Each writes an audit event with **identifiers only —
+  never the username/password values** (update logs changed field *names*).
+  Editing/deleting a service's last login prunes the orphan service.
+- **Data:** `src/lib/credentials/data.ts` `getCredentials()` joins
+  credentials→services for the page; `credentials-view.tsx` is now driven by
+  server data (props), not client sample state.
+- **Sample data:** `supabase/seed.sql` (Webflow group, UI8, Adobe w/ note, Loom,
+  Freepik) — runs on `supabase db reset`, NOT on `db push`, so prod stays empty.
+- Sandbox note: the favicon host (Google s2) is blocked here, so screenshots show
+  the letter fallback; real icons load in a normal environment.
 
 ## Not built yet / next steps
 
-1. **Credentials backend (next milestone).** Tables for `services` (name, url,
-   icon, category note) + `credentials` (service_id, account, username, password,
-   per-item note) — passwords as plain text per `CLAUDE.md` (encryption
-   intentionally deferred). RLS. Server actions for add/edit/remove. Replace the
-   client-state sample data in `credentials-view.tsx` + point the dashboard card
-   at live data.
-2. **Audit logging** (`audit_logs`) — write on create/update/delete and on
-   credential reveal/copy. Never log secret values (`CLAUDE.md`).
-3. Other features: Members, Resources, Templates, Events, Links (currently
-   `SectionPlaceholder`).
-4. **Google Sheets sync** (sheet is source of truth) — later.
-5. Figma component library port is partial (done opportunistically per screen).
+1. **Admin audit-log viewer** — `audit_logs` is populated; no UI reads it yet
+   (admins can query it directly). A simple `/admin/audit` table is the natural
+   next step.
+2. Other features: Members, Resources, Templates, Events, Links (currently
+   `SectionPlaceholder` with per-feature empty states).
+3. **Google Sheets sync** (sheet is source of truth) — later.
+4. Figma component library port is partial (done opportunistically per screen).
+5. **Note:** credential writes are admin-only; if `editor` should manage them
+   too, widen the RLS write policies + the `isAdmin` gate on the page.
 
 ## Gotchas / conventions
 

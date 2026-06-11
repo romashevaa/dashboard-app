@@ -1,0 +1,258 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+import { getCurrentProfile, requireAdmin } from "@/lib/auth/profile";
+import { createClient } from "@/lib/supabase/server";
+import { faviconFor } from "@/lib/credentials/favicon";
+
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
+export type CredentialInput = {
+  service: string;
+  account?: string | null;
+  username: string;
+  password: string;
+  url?: string | null;
+  noIcon: boolean;
+  note?: string | null;
+  categoryNote?: string | null;
+};
+
+export type ActionResult = { ok?: true; error?: string };
+
+function clean(value: string | null | undefined): string | null {
+  const trimmed = (value ?? "").trim();
+  return trimmed.length ? trimmed : null;
+}
+
+/**
+ * Finds a service by name (case-insensitive) and upserts its display fields,
+ * or creates it. Returns the service id. Writes never touch credential values.
+ */
+async function resolveService(
+  supabase: SupabaseClient,
+  input: CredentialInput
+): Promise<{ id: string } | { error: string }> {
+  const name = input.service.trim();
+  const url = clean(input.url);
+  const iconUrl = input.noIcon ? null : url ? (faviconFor(url) ?? null) : null;
+  const categoryNote = clean(input.categoryNote);
+
+  const { data: candidates } = await supabase
+    .from("services")
+    .select("id, name")
+    .ilike("name", name);
+  const existing = candidates?.find(
+    (s) => s.name.toLowerCase() === name.toLowerCase()
+  );
+
+  if (existing) {
+    const { error } = await supabase
+      .from("services")
+      .update({
+        name,
+        url,
+        icon_url: iconUrl,
+        no_icon: input.noIcon,
+        category_note: categoryNote,
+      })
+      .eq("id", existing.id);
+    if (error) return { error: "Couldn't save the service." };
+    return { id: existing.id };
+  }
+
+  const { data: created, error } = await supabase
+    .from("services")
+    .insert({
+      name,
+      url,
+      icon_url: iconUrl,
+      no_icon: input.noIcon,
+      category_note: categoryNote,
+    })
+    .select("id")
+    .single();
+  if (error || !created) return { error: "Couldn't create the service." };
+  return { id: created.id };
+}
+
+/** Deletes a service when it no longer has any credentials (tidy-up). */
+async function pruneOrphanService(supabase: SupabaseClient, serviceId: string) {
+  const { count } = await supabase
+    .from("credentials")
+    .select("id", { count: "exact", head: true })
+    .eq("service_id", serviceId);
+  if ((count ?? 0) === 0) {
+    await supabase.from("services").delete().eq("id", serviceId);
+  }
+}
+
+function validate(input: CredentialInput): string | null {
+  if (!input.service.trim()) return "A service name is required.";
+  if (!input.username.trim()) return "A username is required.";
+  if (!input.password.trim()) return "A password is required.";
+  return null;
+}
+
+export async function createCredential(
+  input: CredentialInput
+): Promise<ActionResult> {
+  await requireAdmin();
+  const invalid = validate(input);
+  if (invalid) return { error: invalid };
+
+  const supabase = await createClient();
+  const service = await resolveService(supabase, input);
+  if ("error" in service) return { error: service.error };
+
+  const { data: created, error } = await supabase
+    .from("credentials")
+    .insert({
+      service_id: service.id,
+      account: clean(input.account),
+      username: input.username.trim(),
+      password: input.password,
+      note: clean(input.note),
+    })
+    .select("id")
+    .single();
+
+  if (error || !created) return { error: "Couldn't add the credential." };
+
+  // Audit: identifiers only — never the username/password values.
+  await supabase.rpc("record_audit_event", {
+    p_action: "create",
+    p_entity_type: "credential",
+    p_entity_id: created.id,
+    p_metadata: { service: input.service.trim(), account: clean(input.account) },
+  });
+
+  revalidatePath("/credentials");
+  return { ok: true };
+}
+
+export async function updateCredential(
+  id: string,
+  input: CredentialInput
+): Promise<ActionResult> {
+  await requireAdmin();
+  const invalid = validate(input);
+  if (invalid) return { error: invalid };
+
+  const supabase = await createClient();
+
+  const { data: before } = await supabase
+    .from("credentials")
+    .select(
+      "service_id, account, username, password, note, service:services(name, url, no_icon, category_note)"
+    )
+    .eq("id", id)
+    .single();
+  if (!before) return { error: "That credential no longer exists." };
+
+  const service = await resolveService(supabase, input);
+  if ("error" in service) return { error: service.error };
+
+  const { error } = await supabase
+    .from("credentials")
+    .update({
+      service_id: service.id,
+      account: clean(input.account),
+      username: input.username.trim(),
+      password: input.password,
+      note: clean(input.note),
+    })
+    .eq("id", id);
+  if (error) return { error: "Couldn't save your changes." };
+
+  // The service may have been renamed — drop the old one if now empty.
+  if (before.service_id !== service.id) {
+    await pruneOrphanService(supabase, before.service_id);
+  }
+
+  // Audit: record which fields changed by NAME only (never values).
+  const beforeService = Array.isArray(before.service)
+    ? before.service[0]
+    : before.service;
+  const changed: string[] = [];
+  if (clean(before.account) !== clean(input.account)) changed.push("account");
+  if (before.username !== input.username.trim()) changed.push("username");
+  if (before.password !== input.password) changed.push("password");
+  if (clean(before.note) !== clean(input.note)) changed.push("note");
+  if ((beforeService?.name ?? "") !== input.service.trim())
+    changed.push("service");
+
+  await supabase.rpc("record_audit_event", {
+    p_action: "update",
+    p_entity_type: "credential",
+    p_entity_id: id,
+    p_metadata: {
+      service: input.service.trim(),
+      account: clean(input.account),
+      fields: changed,
+    },
+  });
+
+  revalidatePath("/credentials");
+  return { ok: true };
+}
+
+export async function deleteCredential(id: string): Promise<ActionResult> {
+  await requireAdmin();
+
+  const supabase = await createClient();
+
+  const { data: before } = await supabase
+    .from("credentials")
+    .select("service_id, account, service:services(name)")
+    .eq("id", id)
+    .single();
+
+  const { error } = await supabase.from("credentials").delete().eq("id", id);
+  if (error) return { error: "Couldn't remove the credential." };
+
+  if (before) {
+    await pruneOrphanService(supabase, before.service_id);
+    const svc = Array.isArray(before.service)
+      ? before.service[0]
+      : before.service;
+    await supabase.rpc("record_audit_event", {
+      p_action: "delete",
+      p_entity_type: "credential",
+      p_entity_id: id,
+      p_metadata: { service: svc?.name ?? null, account: before.account },
+    });
+  }
+
+  revalidatePath("/credentials");
+  return { ok: true };
+}
+
+/**
+ * Records that a credential's password was revealed/copied. Any signed-in user
+ * may do this (visibility is open). Logs identifiers only — never the value.
+ */
+export async function logCredentialReveal(id: string): Promise<void> {
+  const profile = await getCurrentProfile();
+  if (!profile) return;
+
+  const supabase = await createClient();
+  const { data: row } = await supabase
+    .from("credentials")
+    .select("account, service:services(name)")
+    .eq("id", id)
+    .single();
+
+  const svc = Array.isArray(row?.service) ? row?.service[0] : row?.service;
+  await supabase.rpc("record_audit_event", {
+    p_action: "reveal",
+    p_entity_type: "credential",
+    p_entity_id: id,
+    p_metadata: {
+      service: svc?.name ?? null,
+      account: row?.account ?? null,
+      field: "password",
+    },
+  });
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import {
   ArrowUpRight,
   Info,
@@ -15,9 +15,17 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  createCredential,
+  deleteCredential,
+  logCredentialReveal,
+  updateCredential,
+  type CredentialInput,
+} from "@/lib/credentials/actions";
+import type { CredentialRecord } from "@/lib/credentials/data";
 import { CredentialModal, type CredentialDraft } from "./credential-modal";
 import { CopyText } from "./copy-text";
-import { ServiceAvatar, faviconFor } from "./service-avatar";
+import { ServiceAvatar } from "./service-avatar";
 
 type Login = {
   id: string;
@@ -33,34 +41,35 @@ type Login = {
   note?: string;
 };
 
-// Sample data — replaced by a `credentials` table + RLS when the feature is
-// wired up. Passwords are placeholders.
-const wf = (account: string, username: string): Login => ({
-  id: `wf-${account}`,
-  service: "Webflow",
-  account,
-  username,
-  password: `${username}-pw`,
-  url: "https://webflow.com",
-});
+function toLogin(record: CredentialRecord): Login {
+  return {
+    id: record.id,
+    service: record.service,
+    account: record.account ?? undefined,
+    username: record.username,
+    password: record.password,
+    url: record.url ?? undefined,
+    iconUrl: record.iconUrl ?? undefined,
+    noIcon: record.noIcon,
+    note: record.note ?? undefined,
+  };
+}
 
-const INITIAL: Login[] = [
-  wf("DevAccount", "dev-webflow"),
-  wf("ProAccount", "pro-webflow"),
-  wf("HexAccount", "hex-webflow"),
-  wf("HiWebfolks", "hi-webflow"),
-  { id: "wf-extra", service: "Webflow", account: "Marketing", username: "mkt-webflow", password: "mkt-pw", url: "https://webflow.com" },
-  { id: "ui8", service: "UI8", username: "usernameforui", password: "ui8-pw", url: "https://ui8.net" },
-  { id: "adobe", service: "Adobe Creative Cloud", username: "usernameforui", password: "adobe-pw", url: "https://adobe.com", note: "Feel free to log out the oldest user." },
-  { id: "loom", service: "Loom", username: "loomuser", password: "loom-pw", url: "https://loom.com" },
-  { id: "freepik", service: "Freepik", username: "freepickuser", password: "freepik-pw", url: "https://freepik.com" },
-];
-
-// Service-level notes (rendered under a grouped service's heading).
-const SERVICE_NOTES: Record<string, string> = {
-  Webflow:
-    "Please ask in the #shared-creds channel if someone's using a Webflow account you need to log in to.",
-};
+function draftToInput(
+  draft: CredentialDraft,
+  categoryNote: string
+): CredentialInput {
+  return {
+    service: draft.service,
+    account: draft.account ?? null,
+    username: draft.username,
+    password: draft.password,
+    url: draft.url ?? null,
+    noIcon: draft.noIcon ?? false,
+    note: draft.note ?? null,
+    categoryNote: categoryNote || null,
+  };
+}
 
 function matches(login: Login, query: string) {
   const q = query.trim().toLowerCase();
@@ -72,13 +81,29 @@ function matches(login: Login, query: string) {
   );
 }
 
-export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
-  const [logins, setLogins] = useState<Login[]>(INITIAL);
-  const [serviceNotes, setServiceNotes] =
-    useState<Record<string, string>>(SERVICE_NOTES);
+export function CredentialsView({
+  records,
+  isAdmin = false,
+}: {
+  records: CredentialRecord[];
+  isAdmin?: boolean;
+}) {
   const [query, setQuery] = useState("");
   // null = closed, "new" = add, Login = edit that row.
   const [editing, setEditing] = useState<Login | "new" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
+  const logins = useMemo(() => records.map(toLogin), [records]);
+
+  // Service-level notes, derived from the records (one per service).
+  const serviceNotes = useMemo(() => {
+    const notes: Record<string, string> = {};
+    for (const r of records) {
+      if (r.categoryNote) notes[r.service] = r.categoryNote;
+    }
+    return notes;
+  }, [records]);
 
   const { groups, singles } = useMemo(() => {
     const filtered = logins.filter((l) => matches(l, query));
@@ -102,28 +127,22 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
     [logins]
   );
 
-  const remove = (id: string) => setLogins((ls) => ls.filter((l) => l.id !== id));
-
-  const submit = (draft: CredentialDraft, categoryNote: string) => {
-    const iconUrl =
-      draft.iconUrl ?? (draft.url ? faviconFor(draft.url) : undefined);
-
-    if (editing && editing !== "new") {
-      const id = editing.id;
-      setLogins((ls) =>
-        ls.map((l) => (l.id === id ? { ...l, ...draft, iconUrl } : l))
-      );
-    } else {
-      setLogins((ls) => [...ls, { ...draft, id: `c-${Date.now()}`, iconUrl }]);
-    }
-
-    setServiceNotes((prev) => {
-      const next = { ...prev };
-      if (categoryNote) next[draft.service] = categoryNote;
-      else delete next[draft.service];
-      return next;
+  const remove = (id: string) => {
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteCredential(id);
+      if (result.error) setError(result.error);
     });
-    setEditing(null);
+  };
+
+  const submit = async (draft: CredentialDraft, categoryNote: string) => {
+    const input = draftToInput(draft, categoryNote);
+    const result =
+      editing && editing !== "new"
+        ? await updateCredential(editing.id, input)
+        : await createCredential(input);
+    if (result.error) return { error: result.error };
+    return;
   };
 
   const empty = groups.length === 0 && singles.length === 0;
@@ -175,6 +194,15 @@ export function CredentialsView({ isAdmin = false }: { isAdmin?: boolean }) {
           </Button>
         ) : null}
       </div>
+
+      {error ? (
+        <p
+          role="alert"
+          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+        >
+          {error}
+        </p>
+      ) : null}
 
       {groups.map(([service, rows]) => {
         const head = rows.find((r) => r.iconUrl) ?? rows[0];
@@ -358,6 +386,7 @@ function CredentialRow({
           label="password"
           display={<span className="tracking-widest">•••••••••••</span>}
           iconClassName={reveal}
+          onCopy={() => void logCredentialReveal(login.id)}
         />
       </div>
 

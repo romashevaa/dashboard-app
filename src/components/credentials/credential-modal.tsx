@@ -61,7 +61,11 @@ export function CredentialModal({
   /** Present → edit mode; absent → add mode. */
   initial?: CredentialDraft;
   initialCategoryNote?: string;
-  onSubmit: (draft: CredentialDraft, categoryNote: string) => void;
+  /** Persists the draft. Resolve with an error to keep the modal open. */
+  onSubmit: (
+    draft: CredentialDraft,
+    categoryNote: string
+  ) => Promise<{ error?: string } | void>;
 }) {
   const listId = useId();
   const isEdit = Boolean(initial);
@@ -77,18 +81,23 @@ export function CredentialModal({
   const [showNotes, setShowNotes] = useState(
     Boolean(initial?.note || initialCategoryNote)
   );
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const iconUrl = noIcon
     ? undefined
     : url
       ? faviconFor(url)
       : initial?.iconUrl;
-  const canSubmit = service.trim() && username.trim() && password.trim();
+  const canSubmit =
+    Boolean(service.trim() && username.trim() && password.trim()) && !submitting;
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!canSubmit) return;
-    onSubmit(
+    setSubmitting(true);
+    setError(null);
+    const result = await onSubmit(
       {
         service: service.trim(),
         account: account.trim() || undefined,
@@ -101,6 +110,11 @@ export function CredentialModal({
       },
       categoryNote.trim()
     );
+    if (result?.error) {
+      setError(result.error);
+      setSubmitting(false);
+      return;
+    }
     onClose();
   }
 
@@ -217,12 +231,25 @@ export function CredentialModal({
           </button>
         )}
 
+        {error ? (
+          <p className="text-sm font-medium text-destructive">{error}</p>
+        ) : null}
+
         <div className="mt-1 flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            disabled={submitting}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={!canSubmit}>
-            {isEdit ? "Save changes" : "Add credential"}
+            {submitting
+              ? "Saving…"
+              : isEdit
+                ? "Save changes"
+                : "Add credential"}
           </Button>
         </div>
       </form>

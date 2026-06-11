@@ -8,14 +8,15 @@ import { cn } from "@/lib/utils";
 /**
  * Click-to-copy value: the value itself is the target (no separate button),
  * with a copy icon as the affordance and a brief confirmation. Copies without
- * revealing — useful for masked passwords. (Reveal/copy audit logging comes
- * with the real data.)
+ * revealing — useful for masked passwords. `onCopy` fires on a successful copy
+ * (used to audit-log password reveals).
  */
 export function CopyText({
   value,
   label,
   display,
   iconClassName,
+  onCopy,
 }: {
   value: string;
   label: string;
@@ -23,6 +24,8 @@ export function CopyText({
   display?: React.ReactNode;
   /** Extra classes for the copy icon (e.g. hover-reveal). */
   iconClassName?: string;
+  /** Fired once after the value is successfully copied. */
+  onCopy?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -30,6 +33,7 @@ export function CopyText({
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
+      onCopy?.();
       setTimeout(() => setCopied(false), 1500);
     } catch {
       // Clipboard unavailable (e.g. insecure context) — no-op.

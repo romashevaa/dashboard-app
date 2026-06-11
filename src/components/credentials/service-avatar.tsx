@@ -4,15 +4,9 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-/** Derives a favicon URL for a service URL (or undefined if it can't parse). */
-export function faviconFor(url: string): string | undefined {
-  try {
-    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
-    return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
-  } catch {
-    return undefined;
-  }
-}
+// Re-exported so existing imports (`./service-avatar`) keep working; the
+// implementation lives in a plain module usable from server code too.
+export { faviconFor } from "@/lib/credentials/favicon";
 
 /**
  * Service icon: shows the website favicon when available, otherwise a letter
