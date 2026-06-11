@@ -58,7 +58,10 @@ async function resolveService(
         category_note: categoryNote,
       })
       .eq("id", existing.id);
-    if (error) return { error: "Couldn't save the service." };
+    if (error) {
+      console.error("[credentials] update service failed:", error);
+      return { error: `Couldn't save the service: ${error.message}` };
+    }
     return { id: existing.id };
   }
 
@@ -73,7 +76,14 @@ async function resolveService(
     })
     .select("id")
     .single();
-  if (error || !created) return { error: "Couldn't create the service." };
+  if (error || !created) {
+    console.error("[credentials] create service failed:", error);
+    return {
+      error: error
+        ? `Couldn't create the service: ${error.message}`
+        : "Couldn't create the service.",
+    };
+  }
   return { id: created.id };
 }
 
@@ -118,7 +128,14 @@ export async function createCredential(
     .select("id")
     .single();
 
-  if (error || !created) return { error: "Couldn't add the credential." };
+  if (error || !created) {
+    console.error("[credentials] create credential failed:", error);
+    return {
+      error: error
+        ? `Couldn't add the credential: ${error.message}`
+        : "Couldn't add the credential.",
+    };
+  }
 
   // Audit: identifiers only — never the username/password values.
   await supabase.rpc("record_audit_event", {
