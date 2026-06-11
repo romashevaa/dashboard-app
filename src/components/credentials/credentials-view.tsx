@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import {
   closestCenter,
   DndContext,
@@ -690,6 +690,9 @@ function CredentialTable({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
   const sortable = Boolean(onReorder);
+  // Stable id for DndContext: its internal counter-based id differs between
+  // server and client renders and causes a hydration mismatch.
+  const dndId = useId();
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -731,6 +734,7 @@ function CredentialTable({
 
       {sortable ? (
         <DndContext
+          id={dndId}
           sensors={sensors}
           collisionDetection={closestCenter}
           modifiers={[restrictToVerticalAxis, restrictToParentElement]}
@@ -935,11 +939,11 @@ function PasswordCell({
   const [shown, setShown] = useState(false);
 
   const toggle = () => {
-    setShown((prev) => {
-      const next = !prev;
-      if (next) void logCredentialReveal(login.id);
-      return next;
-    });
+    // The audit call must stay outside the setState updater — updaters have
+    // to be pure (React may re-run them during render).
+    const next = !shown;
+    setShown(next);
+    if (next) void logCredentialReveal(login.id);
   };
 
   return (
