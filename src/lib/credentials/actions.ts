@@ -16,7 +16,6 @@ export type CredentialInput = {
   url?: string | null;
   noIcon: boolean;
   note?: string | null;
-  categoryNote?: string | null;
 };
 
 export type ActionResult = { ok?: true; error?: string };
@@ -37,7 +36,6 @@ async function resolveService(
   const name = input.service.trim();
   const url = clean(input.url);
   const iconUrl = input.noIcon ? null : url ? (faviconFor(url) ?? null) : null;
-  const categoryNote = clean(input.categoryNote);
 
   const { data: candidates } = await supabase
     .from("services")
@@ -47,6 +45,9 @@ async function resolveService(
     (s) => s.name.toLowerCase() === name.toLowerCase()
   );
 
+  // Note: category_note is deliberately NOT touched here — it's managed in
+  // one place, at the service heading (see updateServiceNote), so saving an
+  // individual login can never clobber the service-level note.
   if (existing) {
     const { error } = await supabase
       .from("services")
@@ -55,7 +56,6 @@ async function resolveService(
         url,
         icon_url: iconUrl,
         no_icon: input.noIcon,
-        category_note: categoryNote,
       })
       .eq("id", existing.id);
     if (error) {
@@ -72,7 +72,6 @@ async function resolveService(
       url,
       icon_url: iconUrl,
       no_icon: input.noIcon,
-      category_note: categoryNote,
     })
     .select("id")
     .single();
@@ -241,6 +240,41 @@ export async function deleteCredential(id: string): Promise<ActionResult> {
       p_metadata: { service: svc?.name ?? null, account: before.account },
     });
   }
+
+  revalidatePath("/credentials");
+  return { ok: true };
+}
+
+/**
+ * Sets (or clears, with an empty string) a service's category note — the
+ * yellow note under a grouped service's heading. This is the ONLY place the
+ * note is written, so it can't be clobbered from individual logins.
+ */
+export async function updateServiceNote(
+  serviceId: string,
+  note: string
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const supabase = await createClient();
+  const { data: updated, error } = await supabase
+    .from("services")
+    .update({ category_note: clean(note) })
+    .eq("id", serviceId)
+    .select("name")
+    .single();
+
+  if (error || !updated) {
+    console.error("[credentials] update service note failed:", error);
+    return { error: "Couldn't save the note." };
+  }
+
+  await supabase.rpc("record_audit_event", {
+    p_action: "update",
+    p_entity_type: "service",
+    p_entity_id: serviceId,
+    p_metadata: { service: updated.name, fields: ["category_note"] },
+  });
 
   revalidatePath("/credentials");
   return { ok: true };

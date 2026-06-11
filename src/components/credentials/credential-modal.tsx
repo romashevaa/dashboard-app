@@ -51,7 +51,6 @@ export function CredentialModal({
   onClose,
   services,
   initial,
-  initialCategoryNote = "",
   onSubmit,
 }: {
   open: boolean;
@@ -60,12 +59,8 @@ export function CredentialModal({
   services: string[];
   /** Present → edit mode; absent → add mode. */
   initial?: CredentialDraft;
-  initialCategoryNote?: string;
   /** Persists the draft. Resolve with an error to keep the modal open. */
-  onSubmit: (
-    draft: CredentialDraft,
-    categoryNote: string
-  ) => Promise<{ error?: string } | void>;
+  onSubmit: (draft: CredentialDraft) => Promise<{ error?: string } | void>;
 }) {
   const listId = useId();
   const isEdit = Boolean(initial);
@@ -77,10 +72,7 @@ export function CredentialModal({
   const [url, setUrl] = useState(initial?.url ?? "");
   const [noIcon, setNoIcon] = useState(initial?.noIcon ?? false);
   const [note, setNote] = useState(initial?.note ?? "");
-  const [categoryNote, setCategoryNote] = useState(initialCategoryNote);
-  const [showNotes, setShowNotes] = useState(
-    Boolean(initial?.note || initialCategoryNote)
-  );
+  const [showNote, setShowNote] = useState(Boolean(initial?.note));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,19 +89,16 @@ export function CredentialModal({
     if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
-    const result = await onSubmit(
-      {
-        service: service.trim(),
-        account: account.trim() || undefined,
-        username: username.trim(),
-        password,
-        url: url.trim() || undefined,
-        iconUrl,
-        noIcon,
-        note: note.trim() || undefined,
-      },
-      categoryNote.trim()
-    );
+    const result = await onSubmit({
+      service: service.trim(),
+      account: account.trim() || undefined,
+      username: username.trim(),
+      password,
+      url: url.trim() || undefined,
+      iconUrl,
+      noIcon,
+      note: note.trim() || undefined,
+    });
     if (result?.error) {
       setError(result.error);
       setSubmitting(false);
@@ -202,29 +191,19 @@ export function CredentialModal({
           Use a letter instead of the site icon
         </label>
 
-        {showNotes ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Note for this login">
-              <input
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="e.g. Log out the oldest user"
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Category note" hint="under the heading">
-              <input
-                value={categoryNote}
-                onChange={(e) => setCategoryNote(e.target.value)}
-                placeholder="e.g. Ask in #shared-creds first"
-                className={inputClass}
-              />
-            </Field>
-          </div>
+        {showNote ? (
+          <Field label="Note for this login">
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="e.g. Log out the oldest user"
+              className={inputClass}
+            />
+          </Field>
         ) : (
           <button
             type="button"
-            onClick={() => setShowNotes(true)}
+            onClick={() => setShowNote(true)}
             className="self-start text-sm font-medium text-muted-foreground underline-offset-4 outline-none transition-colors hover:text-foreground hover:underline focus-visible:text-foreground"
           >
             + Add a note

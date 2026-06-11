@@ -23,6 +23,7 @@ import {
   deleteCredential,
   logCredentialReveal,
   updateCredential,
+  updateServiceNote,
   type CredentialInput,
 } from "@/lib/credentials/actions";
 import type { CredentialRecord } from "@/lib/credentials/data";
@@ -58,10 +59,7 @@ function toLogin(record: CredentialRecord): Login {
   };
 }
 
-function draftToInput(
-  draft: CredentialDraft,
-  categoryNote: string
-): CredentialInput {
+function draftToInput(draft: CredentialDraft): CredentialInput {
   return {
     service: draft.service,
     account: draft.account ?? null,
@@ -70,7 +68,6 @@ function draftToInput(
     url: draft.url ?? null,
     noIcon: draft.noIcon ?? false,
     note: draft.note ?? null,
-    categoryNote: categoryNote || null,
   };
 }
 
@@ -116,13 +113,13 @@ export function CredentialsView({
 
   const logins = useMemo(() => records.map(toLogin), [records]);
 
-  // Service-level notes, derived from the records (one per service).
-  const serviceNotes = useMemo(() => {
-    const notes: Record<string, string> = {};
+  // Service-level notes + ids, derived from the records (one per service).
+  const services = useMemo(() => {
+    const byName: Record<string, { id: string; note: string | null }> = {};
     for (const r of records) {
-      if (r.categoryNote) notes[r.service] = r.categoryNote;
+      byName[r.service] = { id: r.serviceId, note: r.categoryNote };
     }
-    return notes;
+    return byName;
   }, [records]);
 
   const { groups, singles } = useMemo(() => {
@@ -157,8 +154,8 @@ export function CredentialsView({
     });
   };
 
-  const submit = async (draft: CredentialDraft, categoryNote: string) => {
-    const input = draftToInput(draft, categoryNote);
+  const submit = async (draft: CredentialDraft) => {
+    const input = draftToInput(draft);
     const result =
       editing && editing !== "new"
         ? await updateCredential(editing.id, input)
@@ -254,11 +251,11 @@ export function CredentialsView({
                 />
                 <h2 className="text-lg font-semibold tracking-tight">{service}</h2>
               </div>
-              {serviceNotes[service] ? (
-                <p className="text-sm font-medium text-accent-yellow">
-                  {serviceNotes[service]}
-                </p>
-              ) : null}
+              <ServiceNote
+                serviceId={services[service]?.id}
+                note={services[service]?.note ?? null}
+                isAdmin={isAdmin}
+              />
             </div>
             <CredentialTable
               rows={rows}
@@ -323,13 +320,108 @@ export function CredentialsView({
           onClose={() => setEditing(null)}
           services={serviceNames}
           initial={editing === "new" ? undefined : editing}
-          initialCategoryNote={
-            editing === "new" ? "" : serviceNotes[editing.service] ?? ""
-          }
           onSubmit={submit}
         />
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The service-level (category) note under a grouped service's heading. This is
+ * the single place it's viewed and — for admins — edited inline, instead of
+ * being buried in individual login modals.
+ */
+function ServiceNote({
+  serviceId,
+  note,
+  isAdmin,
+}: {
+  serviceId?: string;
+  note: string | null;
+  isAdmin: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  if (!isAdmin) {
+    return note ? (
+      <p className="text-sm font-medium text-accent-yellow">{note}</p>
+    ) : null;
+  }
+
+  const save = () => {
+    if (!serviceId) return;
+    startTransition(async () => {
+      await updateServiceNote(serviceId, draft);
+      setEditing(false);
+    });
+  };
+
+  if (editing) {
+    return (
+      <div className="flex max-w-xl items-center gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+            if (e.key === "Escape") setEditing(false);
+          }}
+          autoFocus
+          disabled={pending}
+          placeholder="Note for this service, e.g. Ask in #shared-creds first"
+          aria-label="Service note"
+          className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm text-accent-yellow outline-none transition-colors placeholder:text-white/40 focus-visible:border-ring disabled:opacity-60"
+        />
+        <button
+          type="button"
+          onClick={save}
+          disabled={pending}
+          aria-label="Save note"
+          className="shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60 disabled:opacity-60"
+        >
+          <Check className="size-4" aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={() => setEditing(false)}
+          disabled={pending}
+          aria-label="Cancel editing note"
+          className="shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60 disabled:opacity-60"
+        >
+          <X className="size-4" aria-hidden />
+        </button>
+      </div>
+    );
+  }
+
+  const startEditing = () => {
+    setDraft(note ?? "");
+    setEditing(true);
+  };
+
+  return note ? (
+    <p className="group/note flex items-center gap-2 text-sm font-medium text-accent-yellow">
+      <span>{note}</span>
+      <button
+        type="button"
+        onClick={startEditing}
+        aria-label="Edit service note"
+        className="shrink-0 rounded text-muted-foreground opacity-0 outline-none transition-opacity hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/60 group-hover/note:opacity-100"
+      >
+        <Pencil className="size-3.5" aria-hidden />
+      </button>
+    </p>
+  ) : (
+    <button
+      type="button"
+      onClick={startEditing}
+      className="self-start text-xs font-medium text-muted-foreground underline-offset-4 outline-none transition-colors hover:text-foreground hover:underline focus-visible:text-foreground"
+    >
+      + Add service note
+    </button>
   );
 }
 
