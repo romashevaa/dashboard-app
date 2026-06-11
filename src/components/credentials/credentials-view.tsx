@@ -192,6 +192,19 @@ export function CredentialsView({
     [logins]
   );
 
+  // Display fields per existing service, so the modal can prefill the URL and
+  // icon choice when a new login joins an existing service.
+  const serviceDetails = useMemo(() => {
+    const byName: Record<string, { url?: string; noIcon?: boolean }> = {};
+    for (const r of ordered) {
+      byName[r.service.toLowerCase()] = {
+        url: r.url ?? undefined,
+        noIcon: r.noIcon,
+      };
+    }
+    return byName;
+  }, [ordered]);
+
   // Visible sections in page order: each group is a section keyed by its
   // service name; the "All logins" block is one section anchored where its
   // first single sits in the page-wide service order.
@@ -505,6 +518,7 @@ export function CredentialsView({
           open
           onClose={() => setEditing(null)}
           services={serviceNames}
+          serviceDetails={serviceDetails}
           initial={editing === "new" ? undefined : editing}
           onSubmit={submit}
         />

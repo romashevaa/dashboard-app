@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentProfile, requireAdmin } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 import { faviconFor } from "@/lib/credentials/favicon";
+import type { Database } from "@/lib/db/database.types";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -49,14 +50,28 @@ async function resolveService(
   // one place, at the service heading (see updateServiceNote), so saving an
   // individual login can never clobber the service-level note.
   if (existing) {
+    // Only overwrite the service's display fields with values the form
+    // actually provided. A blank URL on a later login must NOT wipe the
+    // service's url/icon for the whole group; clearing the icon is done
+    // explicitly via the "use a letter" checkbox.
+    const update: Database["public"]["Tables"]["services"]["Update"] = {
+      name,
+    };
+    if (input.noIcon) {
+      update.no_icon = true;
+      update.icon_url = null;
+    }
+    if (url) {
+      update.url = url;
+      if (!input.noIcon) {
+        update.no_icon = false;
+        update.icon_url = iconUrl;
+      }
+    }
+
     const { error } = await supabase
       .from("services")
-      .update({
-        name,
-        url,
-        icon_url: iconUrl,
-        no_icon: input.noIcon,
-      })
+      .update(update)
       .eq("id", existing.id);
     if (error) {
       console.error("[credentials] update service failed:", error);

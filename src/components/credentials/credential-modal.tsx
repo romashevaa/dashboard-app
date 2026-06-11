@@ -50,6 +50,7 @@ export function CredentialModal({
   open,
   onClose,
   services,
+  serviceDetails,
   initial,
   onSubmit,
 }: {
@@ -57,6 +58,8 @@ export function CredentialModal({
   onClose: () => void;
   /** Existing service names, offered for grouping. */
   services: string[];
+  /** Display fields per existing service (lowercased name), for prefill. */
+  serviceDetails?: Record<string, { url?: string; noIcon?: boolean }>;
   /** Present → edit mode; absent → add mode. */
   initial?: CredentialDraft;
   /** Persists the draft. Resolve with an error to keep the modal open. */
@@ -126,7 +129,17 @@ export function CredentialModal({
             <input
               list={listId}
               value={service}
-              onChange={(e) => setService(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setService(value);
+                // Joining an existing service: inherit its site/icon so a new
+                // login doesn't have to re-enter (or accidentally clear) them.
+                const match = serviceDetails?.[value.trim().toLowerCase()];
+                if (match && !url) {
+                  if (match.url) setUrl(match.url);
+                  setNoIcon(match.noIcon ?? false);
+                }
+              }}
               placeholder="e.g. Webflow, Claude"
               autoFocus
               required
