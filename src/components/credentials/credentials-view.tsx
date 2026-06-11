@@ -336,7 +336,7 @@ export function CredentialsView({
   const empty = groups.length === 0 && singles.length === 0;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="@container flex flex-col gap-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex h-12 flex-1 items-center gap-2 rounded-lg border border-white/[0.06] bg-background px-4 transition-colors focus-within:border-ring/60">
           <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
@@ -353,7 +353,7 @@ export function CredentialsView({
             }}
             placeholder="Search by service or username…"
             aria-label="Search credentials"
-            className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-white/40 md:text-sm"
+            className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-white/40 md:text-sm [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           />
           {query ? (
             <button
@@ -545,7 +545,7 @@ function SectionMover({
   const buttonClass =
     "rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-30";
   return (
-    <span className="ml-1 flex items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover/head:opacity-100 lg:group-focus-within/head:opacity-100">
+    <span className="ml-1 flex items-center gap-0.5 opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover/head:opacity-100 pointer-fine:group-focus-within/head:opacity-100">
       <button
         type="button"
         onClick={() => onMove(-1)}
@@ -650,7 +650,7 @@ function ServiceNote({
         type="button"
         onClick={startEditing}
         aria-label="Edit service note"
-        className="shrink-0 rounded text-muted-foreground opacity-0 outline-none transition-opacity hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/60 group-hover/note:opacity-100"
+        className="shrink-0 rounded text-muted-foreground opacity-100 outline-none transition-opacity hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/60 pointer-fine:opacity-0 pointer-fine:group-hover/note:opacity-100"
       >
         <Pencil className="size-3.5" aria-hidden />
       </button>
@@ -721,7 +721,7 @@ function CredentialTable({
   return (
     <div className="flex flex-col gap-3">
       {/* Column headers — only the wide (lg) table layout uses them. */}
-      <div className="hidden gap-4 px-3 text-xs font-semibold uppercase tracking-wider text-white/40 lg:flex">
+      <div className="hidden gap-4 px-3 text-xs font-semibold uppercase tracking-wider text-white/40 @2xl:flex">
         <span className="flex-1">Service</span>
         <span className="flex flex-1 items-center gap-1.5">
           <User className="size-4" aria-hidden /> User name
@@ -786,7 +786,7 @@ function CredentialRow({
   // Below lg the rows stack into cards (actions always visible); at lg they
   // become table columns where actions reveal on hover or keyboard focus.
   const reveal =
-    "opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100";
+    "opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-within:opacity-100";
 
   const serviceInner = (
     <>
@@ -798,6 +798,13 @@ function CredentialRow({
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-1 text-sm font-semibold text-foreground">
           <span className="truncate">{serviceLabel}</span>
+          {!useAccountLabel && login.account ? (
+            // Singles render under the service name, so surface the account
+            // label here — otherwise the field would look like it does nothing.
+            <span className="truncate text-xs font-normal text-muted-foreground">
+              · {login.account}
+            </span>
+          ) : null}
           {login.url ? (
             <ArrowUpRight
               className={cn("size-3.5 shrink-0 text-muted-foreground", reveal)}
@@ -824,7 +831,7 @@ function CredentialRow({
       }}
       onMouseLeave={() => setConfirming(false)}
       className={cn(
-        "group flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent focus-within:bg-accent lg:flex-row lg:items-center lg:gap-4 lg:px-3 lg:py-3",
+        "group flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent focus-within:bg-accent @2xl:flex-row @2xl:items-center @2xl:gap-4 @2xl:px-3 @2xl:py-3",
         deleting && "pointer-events-none opacity-40",
         isDragging && "relative z-10 border-b-transparent bg-accent shadow-lg"
       )}
@@ -844,17 +851,17 @@ function CredentialRow({
       )}
 
       <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
-        <User className="size-4 shrink-0 lg:hidden" aria-hidden />
+        <User className="size-4 shrink-0 @2xl:hidden" aria-hidden />
         <CopyText value={login.username} label="username" iconClassName={reveal} />
       </div>
 
       <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
-        <Lock className="size-4 shrink-0 lg:hidden" aria-hidden />
+        <Lock className="size-4 shrink-0 @2xl:hidden" aria-hidden />
         <PasswordCell login={login} revealClass={reveal} />
       </div>
 
       {isAdmin ? (
-        <div className="flex shrink-0 items-center justify-end gap-3 lg:w-20">
+        <div className="flex shrink-0 items-center justify-end gap-3 @2xl:w-20">
           {sortable ? (
             <button
               type="button"

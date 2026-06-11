@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Check, Loader2, TriangleAlert } from "lucide-react";
+import { Check, ChevronDown, Loader2, TriangleAlert } from "lucide-react";
 
 import { APP_ROLES, type AppRole } from "@/lib/db/types";
 import { updateUserRole, type UpdateRoleState } from "./actions";
@@ -28,11 +28,14 @@ export function RoleForm({
   );
 
   return (
-    <form action={formAction} className="flex shrink-0 items-center gap-2">
+    <form
+      action={formAction}
+      className="flex w-full shrink-0 items-center gap-2 sm:w-auto"
+    >
       <input type="hidden" name="userId" value={userId} />
 
       {/* Status sits left of the select so the row width never jumps. */}
-      <span className="grid w-5 place-items-center" aria-live="polite">
+      <span className="grid w-5 shrink-0 place-items-center" aria-live="polite">
         {pending ? (
           <Loader2
             className="size-4 animate-spin text-muted-foreground"
@@ -45,21 +48,29 @@ export function RoleForm({
         ) : null}
       </span>
 
-      <select
-        name="role"
-        defaultValue={currentRole}
-        disabled={isSelf || pending}
-        aria-label="Role"
-        title={isSelf ? "You can't change your own role" : undefined}
-        onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="h-9 rounded-md border border-input bg-background px-2 text-sm capitalize outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
-      >
-        {APP_ROLES.map((role) => (
-          <option key={role} value={role}>
-            {role}
-          </option>
-        ))}
-      </select>
+      {/* The native closed control ignores most CSS, so draw our own chevron
+          over an appearance-none select. */}
+      <span className="relative flex-1 sm:flex-initial">
+        <select
+          name="role"
+          defaultValue={currentRole}
+          disabled={isSelf || pending}
+          aria-label="Role"
+          title={isSelf ? "You can't change your own role" : undefined}
+          onChange={(e) => e.currentTarget.form?.requestSubmit()}
+          className="h-9 w-full appearance-none rounded-md border border-input bg-background pl-3 pr-9 text-sm capitalize outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50 sm:w-32"
+        >
+          {APP_ROLES.map((role) => (
+            <option key={role} value={role}>
+              {role}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          aria-hidden
+          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+        />
+      </span>
 
       {state.error ? (
         <span role="alert" className="text-xs text-destructive">

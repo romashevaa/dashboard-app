@@ -25,24 +25,6 @@ const joinedFormat = new Intl.DateTimeFormat("en", {
   year: "numeric",
 });
 
-const ROLE_LEGEND: { role: string; description: string }[] = [
-  {
-    role: "admin",
-    description:
-      "Full control — manages members and roles, adds/edits credentials, reorders content.",
-  },
-  {
-    role: "editor",
-    description:
-      "No extra powers yet; reserved for feature-level editing as sections are built out.",
-  },
-  {
-    role: "member",
-    description:
-      "Default for new sign-ups. Views everything shared and copies credentials.",
-  },
-];
-
 export default async function AdminPage() {
   const admin = await requireAdmin();
 
@@ -76,7 +58,7 @@ export default async function AdminPage() {
           return (
             <div
               key={profile.id}
-              className="flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent sm:flex-row sm:items-center sm:gap-4 sm:py-3"
+              className="flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:gap-4 sm:py-3"
             >
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <span
@@ -119,22 +101,6 @@ export default async function AdminPage() {
           </p>
         ) : null}
       </div>
-
-      <dl className="grid gap-3 sm:grid-cols-3">
-        {ROLE_LEGEND.map(({ role, description }) => (
-          <div
-            key={role}
-            className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-3"
-          >
-            <dt className="text-sm font-semibold capitalize text-foreground">
-              {role}
-            </dt>
-            <dd className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              {description}
-            </dd>
-          </div>
-        ))}
-      </dl>
     </section>
   );
 }
