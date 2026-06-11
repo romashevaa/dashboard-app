@@ -2,10 +2,34 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   ArrowUpRight,
   Check,
+  ChevronDown,
+  ChevronUp,
   Eye,
   EyeOff,
+  GripVertical,
   Info,
   Lock,
   Pencil,
@@ -22,6 +46,8 @@ import {
   createCredential,
   deleteCredential,
   logCredentialReveal,
+  reorderCredentials,
+  reorderServices,
   updateCredential,
   updateServiceNote,
   type CredentialInput,
@@ -111,16 +137,32 @@ export function CredentialsView({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const logins = useMemo(() => records.map(toLogin), [records]);
+  // Local copy of the server order so drags feel instant; re-synced whenever
+  // the server revalidates (and on error rollback). Synced during render per
+  // React's "adjusting state when props change" pattern.
+  const [ordered, setOrdered] = useState<CredentialRecord[]>(records);
+  const [prevRecords, setPrevRecords] = useState(records);
+  if (prevRecords !== records) {
+    setPrevRecords(records);
+    setOrdered(records);
+  }
+
+  const logins = useMemo(() => ordered.map(toLogin), [ordered]);
 
   // Service-level notes + ids, derived from the records (one per service).
   const services = useMemo(() => {
     const byName: Record<string, { id: string; note: string | null }> = {};
-    for (const r of records) {
+    for (const r of ordered) {
       byName[r.service] = { id: r.serviceId, note: r.categoryNote };
     }
     return byName;
-  }, [records]);
+  }, [ordered]);
+
+  // All service names in their current page-wide order (groups + singles).
+  const orderedServiceNames = useMemo(
+    () => [...new Set(ordered.map((r) => r.service))],
+    [ordered]
+  );
 
   const { groups, singles } = useMemo(() => {
     const filtered = logins.filter((l) => matches(l, query));
@@ -152,6 +194,99 @@ export function CredentialsView({
       if (result.error) setError(result.error);
       setDeletingId(null);
     });
+  };
+
+  // Reordering is admin-only and disabled while searching (a filtered list
+  // has no meaningful "position").
+  const canReorder = isAdmin && !query.trim();
+
+  /** Drag within one service group: persist the new login order. */
+  const reorderRows = (service: string, activeId: string, overId: string) => {
+    const serviceId = services[service]?.id;
+    if (!serviceId) return;
+
+    const current = ordered.filter((r) => r.service === service);
+    const ids = current.map((r) => r.id);
+    const from = ids.indexOf(activeId);
+    const to = ids.indexOf(overId);
+    if (from < 0 || to < 0 || from === to) return;
+
+    const newIds = arrayMove(ids, from, to);
+    const byId = new Map(current.map((r) => [r.id, r]));
+    let next = 0;
+    setOrdered(
+      ordered.map((r) =>
+        r.service === service ? (byId.get(newIds[next++]) ?? r) : r
+      )
+    );
+
+    setError(null);
+    startTransition(async () => {
+      const result = await reorderCredentials(serviceId, newIds);
+      if (result.error) {
+        setError(result.error);
+        setOrdered(records);
+      }
+    });
+  };
+
+  /** Applies a new page-wide service order (optimistic) and persists it. */
+  const applyServiceOrder = (namesInOrder: string[]) => {
+    const byService = new Map<string, CredentialRecord[]>();
+    for (const r of ordered) {
+      const list = byService.get(r.service);
+      if (list) list.push(r);
+      else byService.set(r.service, [r]);
+    }
+    setOrdered(namesInOrder.flatMap((name) => byService.get(name) ?? []));
+
+    const idsInOrder = namesInOrder
+      .map((name) => services[name]?.id)
+      .filter((id): id is string => Boolean(id));
+
+    setError(null);
+    startTransition(async () => {
+      const result = await reorderServices(idsInOrder);
+      if (result.error) {
+        setError(result.error);
+        setOrdered(records);
+      }
+    });
+  };
+
+  /** Move a whole service group up/down among the visible groups. */
+  const moveGroup = (service: string, direction: -1 | 1) => {
+    const groupNames = groups.map(([name]) => name);
+    const from = groupNames.indexOf(service);
+    const to = from + direction;
+    if (from < 0 || to < 0 || to >= groupNames.length) return;
+
+    // Swap the two groups' positions in the page-wide service order; singles
+    // sitting between them are unaffected.
+    const full = [...orderedServiceNames];
+    const a = full.indexOf(service);
+    const b = full.indexOf(groupNames[to]);
+    if (a < 0 || b < 0) return;
+    [full[a], full[b]] = [full[b], full[a]];
+    applyServiceOrder(full);
+  };
+
+  /** Drag within "All logins": reorder those services among themselves. */
+  const reorderSingles = (activeId: string, overId: string) => {
+    const ids = singles.map((l) => l.id);
+    const from = ids.indexOf(activeId);
+    const to = ids.indexOf(overId);
+    if (from < 0 || to < 0 || from === to) return;
+
+    const newSingles = arrayMove(singles, from, to);
+    // Reassign the singles' services into their existing slots of the
+    // page-wide order, leaving grouped services where they are.
+    const singleServices = new Set(singles.map((l) => l.service));
+    let next = 0;
+    const full = orderedServiceNames.map((name) =>
+      singleServices.has(name) ? newSingles[next++].service : name
+    );
+    applyServiceOrder(full);
   };
 
   const submit = async (draft: CredentialDraft) => {
@@ -238,18 +373,40 @@ export function CredentialsView({
         </div>
       ) : null}
 
-      {groups.map(([service, rows]) => {
+      {groups.map(([service, rows], groupIndex) => {
         const head = rows.find((r) => r.iconUrl) ?? rows[0];
         return (
           <section key={service} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
+              <div className="group/head flex items-center gap-2">
                 <ServiceAvatar
                   name={service}
                   iconUrl={head?.iconUrl}
                   noIcon={head?.noIcon}
                 />
                 <h2 className="text-lg font-semibold tracking-tight">{service}</h2>
+                {canReorder && groups.length > 1 ? (
+                  <span className="ml-1 flex items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover/head:opacity-100 lg:group-focus-within/head:opacity-100">
+                    <button
+                      type="button"
+                      onClick={() => moveGroup(service, -1)}
+                      disabled={groupIndex === 0}
+                      aria-label={`Move ${service} up`}
+                      className="rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-30"
+                    >
+                      <ChevronUp className="size-4" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveGroup(service, 1)}
+                      disabled={groupIndex === groups.length - 1}
+                      aria-label={`Move ${service} down`}
+                      className="rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-30"
+                    >
+                      <ChevronDown className="size-4" aria-hidden />
+                    </button>
+                  </span>
+                ) : null}
               </div>
               <ServiceNote
                 serviceId={services[service]?.id}
@@ -264,6 +421,11 @@ export function CredentialsView({
               deletingId={deletingId}
               onRemove={remove}
               onEdit={setEditing}
+              onReorder={
+                canReorder && rows.length > 1
+                  ? (activeId, overId) => reorderRows(service, activeId, overId)
+                  : undefined
+              }
             />
           </section>
         );
@@ -278,6 +440,9 @@ export function CredentialsView({
             deletingId={deletingId}
             onRemove={remove}
             onEdit={setEditing}
+            onReorder={
+              canReorder && singles.length > 1 ? reorderSingles : undefined
+            }
           />
         </section>
       ) : null}
@@ -432,6 +597,7 @@ function CredentialTable({
   deletingId,
   onRemove,
   onEdit,
+  onReorder,
 }: {
   rows: Login[];
   useAccountLabel?: boolean;
@@ -439,7 +605,40 @@ function CredentialTable({
   deletingId: string | null;
   onRemove: (id: string) => void;
   onEdit: (login: Login) => void;
+  /** Present → rows are drag-sortable (admin, not searching). */
+  onReorder?: (activeId: string, overId: string) => void;
 }) {
+  const sensors = useSensors(
+    // The small distance keeps plain clicks (copy, links) from starting drags.
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+  const sortable = Boolean(onReorder);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      onReorder?.(String(active.id), String(over.id));
+    }
+  };
+
+  const body = (
+    <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-background">
+      {rows.map((login) => (
+        <CredentialRow
+          key={login.id}
+          login={login}
+          useAccountLabel={useAccountLabel}
+          isAdmin={isAdmin}
+          deleting={deletingId === login.id}
+          sortable={sortable}
+          onRemove={onRemove}
+          onEdit={onEdit}
+        />
+      ))}
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-3">
       {/* Column headers — only the wide (lg) table layout uses them. */}
@@ -451,22 +650,26 @@ function CredentialTable({
         <span className="flex flex-1 items-center gap-1.5">
           <Lock className="size-4" aria-hidden /> Password
         </span>
-        {isAdmin ? <span className="w-16 shrink-0" /> : null}
+        {isAdmin ? <span className="w-20 shrink-0" /> : null}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-background">
-        {rows.map((login) => (
-          <CredentialRow
-            key={login.id}
-            login={login}
-            useAccountLabel={useAccountLabel}
-            isAdmin={isAdmin}
-            deleting={deletingId === login.id}
-            onRemove={onRemove}
-            onEdit={onEdit}
-          />
-        ))}
-      </div>
+      {sortable ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={rows.map((r) => r.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {body}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        body
+      )}
     </div>
   );
 }
@@ -476,6 +679,7 @@ function CredentialRow({
   useAccountLabel,
   isAdmin,
   deleting,
+  sortable,
   onRemove,
   onEdit,
 }: {
@@ -483,11 +687,21 @@ function CredentialRow({
   useAccountLabel: boolean;
   isAdmin: boolean;
   deleting: boolean;
+  sortable: boolean;
   onRemove: (id: string) => void;
   onEdit: (login: Login) => void;
 }) {
   // Deleting is destructive and immediate — require a second click to confirm.
   const [confirming, setConfirming] = useState(false);
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: login.id, disabled: !sortable });
   const serviceLabel = useAccountLabel ? login.account ?? login.service : login.service;
   // Below lg the rows stack into cards (actions always visible); at lg they
   // become table columns where actions reveal on hover or keyboard focus.
@@ -523,10 +737,16 @@ function CredentialRow({
 
   return (
     <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
       onMouseLeave={() => setConfirming(false)}
       className={cn(
         "group flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent focus-within:bg-accent lg:flex-row lg:items-center lg:gap-4 lg:px-3 lg:py-3",
-        deleting && "pointer-events-none opacity-40"
+        deleting && "pointer-events-none opacity-40",
+        isDragging && "relative z-10 border-b-transparent bg-accent shadow-lg"
       )}
     >
       {login.url ? (
@@ -554,7 +774,22 @@ function CredentialRow({
       </div>
 
       {isAdmin ? (
-        <div className="flex shrink-0 items-center justify-end gap-3 lg:w-16">
+        <div className="flex shrink-0 items-center justify-end gap-3 lg:w-20">
+          {sortable ? (
+            <button
+              type="button"
+              ref={setActivatorNodeRef}
+              {...attributes}
+              {...listeners}
+              aria-label={`Reorder ${serviceLabel}`}
+              className={cn(
+                "shrink-0 cursor-grab touch-none rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60 active:cursor-grabbing",
+                reveal
+              )}
+            >
+              <GripVertical className="size-4" aria-hidden />
+            </button>
+          ) : null}
           {confirming ? (
             <>
               <button

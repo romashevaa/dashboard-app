@@ -65,6 +65,14 @@ async function resolveService(
     return { id: existing.id };
   }
 
+  // New services append at the end of the manual order.
+  const { data: lastService } = await supabase
+    .from("services")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   const { data: created, error } = await supabase
     .from("services")
     .insert({
@@ -72,6 +80,7 @@ async function resolveService(
       url,
       icon_url: iconUrl,
       no_icon: input.noIcon,
+      sort_order: (lastService?.sort_order ?? 0) + 1,
     })
     .select("id")
     .single();
@@ -115,6 +124,15 @@ export async function createCredential(
   const service = await resolveService(supabase, input);
   if ("error" in service) return { error: service.error };
 
+  // New logins append at the end of their service's manual order.
+  const { data: lastRow } = await supabase
+    .from("credentials")
+    .select("sort_order")
+    .eq("service_id", service.id)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   const { data: created, error } = await supabase
     .from("credentials")
     .insert({
@@ -123,6 +141,7 @@ export async function createCredential(
       username: input.username.trim(),
       password: input.password,
       note: clean(input.note),
+      sort_order: (lastRow?.sort_order ?? 0) + 1,
     })
     .select("id")
     .single();
@@ -170,6 +189,19 @@ export async function updateCredential(
   const service = await resolveService(supabase, input);
   if ("error" in service) return { error: service.error };
 
+  // Moving to a different service → append at the end of that service's order.
+  let sortOrder: number | undefined;
+  if (before.service_id !== service.id) {
+    const { data: lastRow } = await supabase
+      .from("credentials")
+      .select("sort_order")
+      .eq("service_id", service.id)
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    sortOrder = (lastRow?.sort_order ?? 0) + 1;
+  }
+
   const { error } = await supabase
     .from("credentials")
     .update({
@@ -178,6 +210,7 @@ export async function updateCredential(
       username: input.username.trim(),
       password: input.password,
       note: clean(input.note),
+      ...(sortOrder !== undefined ? { sort_order: sortOrder } : {}),
     })
     .eq("id", id);
   if (error) return { error: "Couldn't save your changes." };
@@ -274,6 +307,73 @@ export async function updateServiceNote(
     p_entity_type: "service",
     p_entity_id: serviceId,
     p_metadata: { service: updated.name, fields: ["category_note"] },
+  });
+
+  revalidatePath("/credentials");
+  return { ok: true };
+}
+
+/**
+ * Persists a new manual order for the logins of one service. `orderedIds` is
+ * the full id list in the desired order; each row's sort_order becomes its
+ * index. Scoped to the service so ids can't reorder other services' rows.
+ */
+export async function reorderCredentials(
+  serviceId: string,
+  orderedIds: string[]
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const supabase = await createClient();
+  for (const [index, id] of orderedIds.entries()) {
+    const { error } = await supabase
+      .from("credentials")
+      .update({ sort_order: index + 1 })
+      .eq("id", id)
+      .eq("service_id", serviceId);
+    if (error) {
+      console.error("[credentials] reorder failed:", error);
+      return { error: "Couldn't save the new order." };
+    }
+  }
+
+  await supabase.rpc("record_audit_event", {
+    p_action: "reorder",
+    p_entity_type: "service",
+    p_entity_id: serviceId,
+    p_metadata: { scope: "credentials", count: orderedIds.length },
+  });
+
+  revalidatePath("/credentials");
+  return { ok: true };
+}
+
+/**
+ * Persists a new manual order for services (group order on the page, and the
+ * order of singles in "All logins").
+ */
+export async function reorderServices(
+  orderedIds: string[]
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const supabase = await createClient();
+  for (const [index, id] of orderedIds.entries()) {
+    const { error } = await supabase
+      .from("services")
+      .update({ sort_order: index + 1 })
+      .eq("id", id);
+    if (error) {
+      console.error("[credentials] reorder services failed:", error);
+      return { error: "Couldn't save the new order." };
+    }
+  }
+
+  await supabase.rpc("record_audit_event", {
+    p_action: "reorder",
+    p_entity_type: "service",
+    p_entity_id: null,
+    p_metadata: { scope: "services", count: orderedIds.length },
   });
 
   revalidatePath("/credentials");

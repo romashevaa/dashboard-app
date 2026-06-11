@@ -29,6 +29,7 @@ export type Database = {
           icon_url: string | null;
           no_icon: boolean;
           category_note: string | null;
+          sort_order: number;
           created_at: string;
           updated_at: string;
         };
@@ -39,6 +40,7 @@ export type Database = {
           icon_url?: string | null;
           no_icon?: boolean;
           category_note?: string | null;
+          sort_order?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -49,6 +51,7 @@ export type Database = {
           icon_url?: string | null;
           no_icon?: boolean;
           category_note?: string | null;
+          sort_order?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -62,6 +65,7 @@ export type Database = {
           username: string;
           password: string;
           note: string | null;
+          sort_order: number;
           created_at: string;
           updated_at: string;
         };
@@ -72,6 +76,7 @@ export type Database = {
           username: string;
           password: string;
           note?: string | null;
+          sort_order?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -82,6 +87,7 @@ export type Database = {
           username?: string;
           password?: string;
           note?: string | null;
+          sort_order?: number;
           created_at?: string;
           updated_at?: string;
         };

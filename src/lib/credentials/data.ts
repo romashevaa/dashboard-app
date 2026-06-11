@@ -23,8 +23,10 @@ export type CredentialRecord = {
 
 /**
  * Loads every credential the signed-in user may see (RLS gates this — open to
- * all authenticated users for now), joined to its service. Sorted by service
- * name, then account/username for stable grouping in the UI.
+ * all authenticated users for now), joined to its service. Ordered by the
+ * admin-managed sort: services first (group order), then logins within each
+ * service. PostgREST can't order a parent by an embedded column, so the sort
+ * happens here.
  */
 export async function getCredentials(): Promise<CredentialRecord[]> {
   const supabase = await createClient();
@@ -32,33 +34,39 @@ export async function getCredentials(): Promise<CredentialRecord[]> {
   const { data, error } = await supabase
     .from("credentials")
     .select(
-      "id, account, username, password, note, service:services(id, name, url, icon_url, no_icon, category_note)"
-    )
-    .order("username", { ascending: true });
+      "id, account, username, password, note, sort_order, service:services(id, name, url, icon_url, no_icon, category_note, sort_order)"
+    );
 
   if (error || !data) return [];
 
-  const records: CredentialRecord[] = data.map((row) => {
+  const rows = data.map((row) => {
     // The embedded relation comes back as an object (or, defensively, an array).
     const service = Array.isArray(row.service) ? row.service[0] : row.service;
     return {
-      id: row.id,
-      serviceId: service?.id ?? "",
-      service: service?.name ?? "Unknown",
-      account: row.account,
-      username: row.username,
-      password: row.password,
-      url: service?.url ?? null,
-      iconUrl: service?.icon_url ?? null,
-      noIcon: service?.no_icon ?? false,
-      note: row.note,
-      categoryNote: service?.category_note ?? null,
+      record: {
+        id: row.id,
+        serviceId: service?.id ?? "",
+        service: service?.name ?? "Unknown",
+        account: row.account,
+        username: row.username,
+        password: row.password,
+        url: service?.url ?? null,
+        iconUrl: service?.icon_url ?? null,
+        noIcon: service?.no_icon ?? false,
+        note: row.note,
+        categoryNote: service?.category_note ?? null,
+      } satisfies CredentialRecord,
+      serviceSort: service?.sort_order ?? 0,
+      rowSort: row.sort_order,
     };
   });
 
-  return records.sort(
-    (a, b) =>
-      a.service.localeCompare(b.service) ||
-      (a.account ?? a.username).localeCompare(b.account ?? b.username)
-  );
+  return rows
+    .sort(
+      (a, b) =>
+        a.serviceSort - b.serviceSort ||
+        a.record.service.localeCompare(b.record.service) ||
+        a.rowSort - b.rowSort
+    )
+    .map((r) => r.record);
 }
