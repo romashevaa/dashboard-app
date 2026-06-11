@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   ArrowUpRight,
+  Check,
+  Eye,
+  EyeOff,
   Info,
   Lock,
   Pencil,
@@ -92,7 +95,24 @@ export function CredentialsView({
   // null = closed, "new" = add, Login = edit that row.
   const [editing, setEditing] = useState<Login | "new" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Make the advertised ⌘F shortcut real: focus the search field instead of
+  // the browser's find-in-page (skip it while the modal is open).
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
+        if (document.querySelector("[role=dialog]")) return;
+        event.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const logins = useMemo(() => records.map(toLogin), [records]);
 
@@ -129,9 +149,11 @@ export function CredentialsView({
 
   const remove = (id: string) => {
     setError(null);
+    setDeletingId(id);
     startTransition(async () => {
       const result = await deleteCredential(id);
       if (result.error) setError(result.error);
+      setDeletingId(null);
     });
   };
 
@@ -153,9 +175,16 @@ export function CredentialsView({
         <div className="flex h-12 flex-1 items-center gap-2 rounded-lg border border-white/[0.06] bg-background px-4 transition-colors focus-within:border-ring/60">
           <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
           <input
+            ref={searchRef}
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setQuery("");
+                e.currentTarget.blur();
+              }
+            }}
             placeholder="Search by service or username…"
             aria-label="Search credentials"
             className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-white/40 md:text-sm"
@@ -196,12 +225,20 @@ export function CredentialsView({
       </div>
 
       {error ? (
-        <p
+        <div
           role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+          className="flex items-center gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
         >
-          {error}
-        </p>
+          <span className="flex-1">{error}</span>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            aria-label="Dismiss error"
+            className="shrink-0 rounded outline-none transition-opacity hover:opacity-70 focus-visible:ring-2 focus-visible:ring-destructive/60"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+        </div>
       ) : null}
 
       {groups.map(([service, rows]) => {
@@ -227,6 +264,7 @@ export function CredentialsView({
               rows={rows}
               useAccountLabel
               isAdmin={isAdmin}
+              deletingId={deletingId}
               onRemove={remove}
               onEdit={setEditing}
             />
@@ -240,6 +278,7 @@ export function CredentialsView({
           <CredentialTable
             rows={singles}
             isAdmin={isAdmin}
+            deletingId={deletingId}
             onRemove={remove}
             onEdit={setEditing}
           />
@@ -247,9 +286,34 @@ export function CredentialsView({
       ) : null}
 
       {empty ? (
-        <p className="rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center text-sm text-muted-foreground">
-          {query ? `No credentials match “${query}”.` : "No credentials yet."}
-        </p>
+        <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center">
+          <p className="text-sm text-muted-foreground">
+            {query ? (
+              <>No credentials match “{query}”.</>
+            ) : isAdmin ? (
+              "No credentials yet — add the first one."
+            ) : (
+              "No credentials yet."
+            )}
+          </p>
+          {query ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setQuery("");
+                searchRef.current?.focus();
+              }}
+            >
+              Clear search
+            </Button>
+          ) : isAdmin ? (
+            <Button type="button" onClick={() => setEditing("new")}>
+              <Plus className="size-4" aria-hidden />
+              Add credential
+            </Button>
+          ) : null}
+        </div>
       ) : null}
 
       {isAdmin && editing !== null ? (
@@ -273,12 +337,14 @@ function CredentialTable({
   rows,
   useAccountLabel = false,
   isAdmin = false,
+  deletingId,
   onRemove,
   onEdit,
 }: {
   rows: Login[];
   useAccountLabel?: boolean;
   isAdmin?: boolean;
+  deletingId: string | null;
   onRemove: (id: string) => void;
   onEdit: (login: Login) => void;
 }) {
@@ -303,6 +369,7 @@ function CredentialTable({
             login={login}
             useAccountLabel={useAccountLabel}
             isAdmin={isAdmin}
+            deleting={deletingId === login.id}
             onRemove={onRemove}
             onEdit={onEdit}
           />
@@ -316,15 +383,19 @@ function CredentialRow({
   login,
   useAccountLabel,
   isAdmin,
+  deleting,
   onRemove,
   onEdit,
 }: {
   login: Login;
   useAccountLabel: boolean;
   isAdmin: boolean;
+  deleting: boolean;
   onRemove: (id: string) => void;
   onEdit: (login: Login) => void;
 }) {
+  // Deleting is destructive and immediate — require a second click to confirm.
+  const [confirming, setConfirming] = useState(false);
   const serviceLabel = useAccountLabel ? login.account ?? login.service : login.service;
   // Below lg the rows stack into cards (actions always visible); at lg they
   // become table columns where actions reveal on hover or keyboard focus.
@@ -359,7 +430,13 @@ function CredentialRow({
   );
 
   return (
-    <div className="group flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent focus-within:bg-accent lg:flex-row lg:items-center lg:gap-4 lg:px-3 lg:py-3">
+    <div
+      onMouseLeave={() => setConfirming(false)}
+      className={cn(
+        "group flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent focus-within:bg-accent lg:flex-row lg:items-center lg:gap-4 lg:px-3 lg:py-3",
+        deleting && "pointer-events-none opacity-40"
+      )}
+    >
       {login.url ? (
         <a
           href={login.url}
@@ -379,43 +456,121 @@ function CredentialRow({
         <CopyText value={login.username} label="username" iconClassName={reveal} />
       </div>
 
-      <div className="flex flex-1 items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
         <Lock className="size-4 shrink-0 lg:hidden" aria-hidden />
-        <CopyText
-          value={login.password}
-          label="password"
-          display={<span className="tracking-widest">•••••••••••</span>}
-          iconClassName={reveal}
-          onCopy={() => void logCredentialReveal(login.id)}
-        />
+        <PasswordCell login={login} revealClass={reveal} />
       </div>
 
       {isAdmin ? (
         <div className="flex shrink-0 items-center justify-end gap-3 lg:w-16">
-          <button
-            type="button"
-            onClick={() => onEdit(login)}
-            aria-label={`Edit ${serviceLabel}`}
-            className={cn(
-              "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60",
-              reveal
-            )}
-          >
-            <Pencil className="size-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => onRemove(login.id)}
-            aria-label={`Remove ${serviceLabel}`}
-            className={cn(
-              "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring/60",
-              reveal
-            )}
-          >
-            <Trash2 className="size-4" aria-hidden />
-          </button>
+          {confirming ? (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirming(false);
+                  onRemove(login.id);
+                }}
+                aria-label={`Confirm removing ${serviceLabel}`}
+                className="shrink-0 rounded text-destructive outline-none transition-colors hover:text-destructive/80 focus-visible:ring-2 focus-visible:ring-destructive/60"
+              >
+                <Check className="size-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                aria-label="Cancel removal"
+                className="shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+              >
+                <X className="size-4" aria-hidden />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => onEdit(login)}
+                aria-label={`Edit ${serviceLabel}`}
+                className={cn(
+                  "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60",
+                  reveal
+                )}
+              >
+                <Pencil className="size-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                aria-label={`Remove ${serviceLabel}`}
+                className={cn(
+                  "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring/60",
+                  reveal
+                )}
+              >
+                <Trash2 className="size-4" aria-hidden />
+              </button>
+            </>
+          )}
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Masked password with copy-to-clipboard plus an eye toggle to reveal it
+ * in place (for when it must be typed somewhere, not pasted). Both copying
+ * and revealing write a `reveal` audit event.
+ */
+function PasswordCell({
+  login,
+  revealClass,
+}: {
+  login: Login;
+  revealClass: string;
+}) {
+  const [shown, setShown] = useState(false);
+
+  const toggle = () => {
+    setShown((prev) => {
+      const next = !prev;
+      if (next) void logCredentialReveal(login.id);
+      return next;
+    });
+  };
+
+  return (
+    <>
+      <CopyText
+        value={login.password}
+        label="password"
+        display={
+          shown ? (
+            <span className="font-mono text-[13px]">{login.password}</span>
+          ) : (
+            <span className="tracking-widest">•••••••••••</span>
+          )
+        }
+        iconClassName={revealClass}
+        onCopy={() => void logCredentialReveal(login.id)}
+      />
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={shown ? "Hide password" : "Show password"}
+        aria-pressed={shown}
+        className={cn(
+          "shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60",
+          // While revealed, keep the toggle visible so it can be hidden again.
+          shown ? "opacity-100" : revealClass
+        )}
+      >
+        {shown ? (
+          <EyeOff className="size-4" aria-hidden />
+        ) : (
+          <Eye className="size-4" aria-hidden />
+        )}
+      </button>
+    </>
   );
 }
