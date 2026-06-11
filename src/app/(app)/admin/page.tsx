@@ -2,12 +2,46 @@ import type { Metadata } from "next";
 
 import { requireAdmin } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
-import { EmojiIcon } from "@/components/ui/emoji-icon";
+import type { Profile } from "@/lib/db/types";
 import { RoleForm } from "./role-form";
 
 export const metadata: Metadata = {
   title: "Admin",
 };
+
+function displayName(profile: Profile): string {
+  const base =
+    profile.full_name?.trim() || profile.email.split("@")[0] || profile.email;
+  return base.charAt(0).toUpperCase() + base.slice(1);
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).slice(0, 2);
+  return parts.map((p) => p[0]?.toUpperCase() ?? "").join("") || "?";
+}
+
+const joinedFormat = new Intl.DateTimeFormat("en", {
+  month: "short",
+  year: "numeric",
+});
+
+const ROLE_LEGEND: { role: string; description: string }[] = [
+  {
+    role: "admin",
+    description:
+      "Full control — manages members and roles, adds/edits credentials, reorders content.",
+  },
+  {
+    role: "editor",
+    description:
+      "No extra powers yet; reserved for feature-level editing as sections are built out.",
+  },
+  {
+    role: "member",
+    description:
+      "Default for new sign-ups. Views everything shared and copies credentials.",
+  },
+];
 
 export default async function AdminPage() {
   const admin = await requireAdmin();
@@ -18,80 +52,89 @@ export default async function AdminPage() {
     .select("*")
     .order("created_at", { ascending: true });
 
-  const profiles = data ?? [];
+  const profiles = (data ?? []) as Profile[];
 
   return (
-    <section>
-      <div className="mb-6 flex items-center gap-3">
-        <span className="grid size-10 place-items-center rounded-lg bg-white/10">
-          <EmojiIcon name="shield" size={22} />
-        </span>
+    <section className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">
-            User management
-          </h1>
+          <h2 className="text-lg font-semibold tracking-tight">Team members</h2>
           <p className="text-sm text-muted-foreground">
-            Assign roles to team members. Changes are gated by row-level
-            security.
+            Everyone who has signed in. Role changes apply immediately —
+            enforced by the database, not just the UI.
           </p>
         </div>
+        <span className="rounded-full bg-white/[0.06] px-3 py-1 text-xs font-medium text-muted-foreground">
+          {profiles.length} {profiles.length === 1 ? "member" : "members"}
+        </span>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/40 text-left">
-              <th className="px-4 py-3 font-medium">User</th>
-              <th className="px-4 py-3 font-medium">Current role</th>
-              <th className="px-4 py-3 font-medium">Assign role</th>
-            </tr>
-          </thead>
-          <tbody>
-            {profiles.map((profile) => {
-              const isSelf = profile.id === admin.id;
-              return (
-                <tr key={profile.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3">
-                    <div className="font-medium">
-                      {profile.full_name ?? profile.email}
-                      {isSelf ? (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          (you)
-                        </span>
-                      ) : null}
-                    </div>
-                    {profile.full_name ? (
-                      <div className="text-xs text-muted-foreground">
-                        {profile.email}
-                      </div>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3 capitalize text-muted-foreground">
-                    {profile.role}
-                  </td>
-                  <td className="px-4 py-3">
-                    <RoleForm
-                      userId={profile.id}
-                      currentRole={profile.role}
-                      isSelf={isSelf}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-            {profiles.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={3}
-                  className="px-4 py-10 text-center text-muted-foreground"
+      <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-background">
+        {profiles.map((profile) => {
+          const isSelf = profile.id === admin.id;
+          const name = displayName(profile);
+          return (
+            <div
+              key={profile.id}
+              className="flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 transition-colors last:border-b-0 hover:bg-accent sm:flex-row sm:items-center sm:gap-4 sm:py-3"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <span
+                  aria-hidden
+                  className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-semibold text-white"
                 >
-                  No users yet.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+                  {initials(name)}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {name}
+                    {isSelf ? (
+                      <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                        (you)
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {profile.email}
+                  </p>
+                </div>
+              </div>
+
+              <span className="hidden shrink-0 text-xs text-muted-foreground md:block">
+                Joined {joinedFormat.format(new Date(profile.created_at))}
+              </span>
+
+              <RoleForm
+                userId={profile.id}
+                currentRole={profile.role}
+                isSelf={isSelf}
+              />
+            </div>
+          );
+        })}
+
+        {profiles.length === 0 ? (
+          <p className="px-6 py-16 text-center text-sm text-muted-foreground">
+            No one has signed in yet.
+          </p>
+        ) : null}
       </div>
+
+      <dl className="grid gap-3 sm:grid-cols-3">
+        {ROLE_LEGEND.map(({ role, description }) => (
+          <div
+            key={role}
+            className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-3"
+          >
+            <dt className="text-sm font-semibold capitalize text-foreground">
+              {role}
+            </dt>
+            <dd className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {description}
+            </dd>
+          </div>
+        ))}
+      </dl>
     </section>
   );
 }
