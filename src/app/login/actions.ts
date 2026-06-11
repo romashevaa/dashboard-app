@@ -60,11 +60,21 @@ export async function requestSignIn(
   });
 
   if (error) {
-    return {
-      status: "error",
-      message: "Couldn't send the email. Try again in a moment.",
-      email,
-    };
+    // Full detail server-side only (Vercel function logs) — the login page is
+    // public, so don't echo raw SMTP/provider errors to it.
+    console.error(
+      "[auth] signInWithOtp failed:",
+      error.status,
+      error.code,
+      error.message
+    );
+    const message =
+      error.code === "over_email_send_rate_limit"
+        ? "Too many sign-in emails requested — wait a minute and try again."
+        : error.status && error.status >= 500
+          ? "Email delivery failed on the server — likely the SMTP settings. Check the Supabase auth logs."
+          : "Couldn't send the email. Try again in a moment.";
+    return { status: "error", message, email };
   }
 
   return { status: "sent", email };
