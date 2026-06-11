@@ -97,6 +97,12 @@ function draftToInput(draft: CredentialDraft): CredentialInput {
   };
 }
 
+/**
+ * Sentinel section key for the "All logins" section. The leading space can't
+ * collide with a real service name (those are trimmed on save).
+ */
+const SINGLES_SECTION = " all-logins";
+
 function matches(login: Login, query: string) {
   const q = query.trim().toLowerCase();
   if (!q) return true;
@@ -186,6 +192,21 @@ export function CredentialsView({
     [logins]
   );
 
+  // Visible sections in page order: each group is a section keyed by its
+  // service name; the "All logins" block is one section anchored where its
+  // first single sits in the page-wide service order.
+  const sections = useMemo(() => {
+    const groupSet = new Set(groups.map(([name]) => name));
+    const singleSet = new Set(singles.map((l) => l.service));
+    const keys: string[] = [];
+    for (const name of orderedServiceNames) {
+      if (groupSet.has(name)) keys.push(name);
+      else if (singleSet.has(name) && !keys.includes(SINGLES_SECTION))
+        keys.push(SINGLES_SECTION);
+    }
+    return keys;
+  }, [groups, singles, orderedServiceNames]);
+
   const remove = (id: string) => {
     setError(null);
     setDeletingId(id);
@@ -254,21 +275,21 @@ export function CredentialsView({
     });
   };
 
-  /** Move a whole service group up/down among the visible groups. */
-  const moveGroup = (service: string, direction: -1 | 1) => {
-    const groupNames = groups.map(([name]) => name);
-    const from = groupNames.indexOf(service);
+  /**
+   * Move a whole section (a service group, or the "All logins" block) up or
+   * down the page. Rebuilds the page-wide service order from the new section
+   * order — which also keeps the singles contiguous.
+   */
+  const moveSection = (key: string, direction: -1 | 1) => {
+    const from = sections.indexOf(key);
     const to = from + direction;
-    if (from < 0 || to < 0 || to >= groupNames.length) return;
+    if (from < 0 || to < 0 || to >= sections.length) return;
 
-    // Swap the two groups' positions in the page-wide service order; singles
-    // sitting between them are unaffected.
-    const full = [...orderedServiceNames];
-    const a = full.indexOf(service);
-    const b = full.indexOf(groupNames[to]);
-    if (a < 0 || b < 0) return;
-    [full[a], full[b]] = [full[b], full[a]];
-    applyServiceOrder(full);
+    const newSections = arrayMove(sections, from, to);
+    const singleNames = singles.map((l) => l.service);
+    applyServiceOrder(
+      newSections.flatMap((k) => (k === SINGLES_SECTION ? singleNames : [k]))
+    );
   };
 
   /** Drag within "All logins": reorder those services among themselves. */
@@ -373,7 +394,44 @@ export function CredentialsView({
         </div>
       ) : null}
 
-      {groups.map(([service, rows], groupIndex) => {
+      {sections.map((sectionKey, sectionIndex) => {
+        const mover =
+          canReorder && sections.length > 1 ? (
+            <SectionMover
+              label={
+                sectionKey === SINGLES_SECTION ? "All logins" : sectionKey
+              }
+              isFirst={sectionIndex === 0}
+              isLast={sectionIndex === sections.length - 1}
+              onMove={(direction) => moveSection(sectionKey, direction)}
+            />
+          ) : null;
+
+        if (sectionKey === SINGLES_SECTION) {
+          return (
+            <section key={sectionKey} className="flex flex-col gap-4">
+              <div className="group/head flex items-center gap-2">
+                <h2 className="text-lg font-semibold tracking-tight">
+                  All logins
+                </h2>
+                {mover}
+              </div>
+              <CredentialTable
+                rows={singles}
+                isAdmin={isAdmin}
+                deletingId={deletingId}
+                onRemove={remove}
+                onEdit={setEditing}
+                onReorder={
+                  canReorder && singles.length > 1 ? reorderSingles : undefined
+                }
+              />
+            </section>
+          );
+        }
+
+        const service = sectionKey;
+        const rows = groups.find(([name]) => name === service)?.[1] ?? [];
         const head = rows.find((r) => r.iconUrl) ?? rows[0];
         return (
           <section key={service} className="flex flex-col gap-4">
@@ -385,28 +443,7 @@ export function CredentialsView({
                   noIcon={head?.noIcon}
                 />
                 <h2 className="text-lg font-semibold tracking-tight">{service}</h2>
-                {canReorder && groups.length > 1 ? (
-                  <span className="ml-1 flex items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover/head:opacity-100 lg:group-focus-within/head:opacity-100">
-                    <button
-                      type="button"
-                      onClick={() => moveGroup(service, -1)}
-                      disabled={groupIndex === 0}
-                      aria-label={`Move ${service} up`}
-                      className="rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-30"
-                    >
-                      <ChevronUp className="size-4" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveGroup(service, 1)}
-                      disabled={groupIndex === groups.length - 1}
-                      aria-label={`Move ${service} down`}
-                      className="rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-30"
-                    >
-                      <ChevronDown className="size-4" aria-hidden />
-                    </button>
-                  </span>
-                ) : null}
+                {mover}
               </div>
               <ServiceNote
                 serviceId={services[service]?.id}
@@ -430,22 +467,6 @@ export function CredentialsView({
           </section>
         );
       })}
-
-      {singles.length > 0 ? (
-        <section className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold tracking-tight">All logins</h2>
-          <CredentialTable
-            rows={singles}
-            isAdmin={isAdmin}
-            deletingId={deletingId}
-            onRemove={remove}
-            onEdit={setEditing}
-            onReorder={
-              canReorder && singles.length > 1 ? reorderSingles : undefined
-            }
-          />
-        </section>
-      ) : null}
 
       {empty ? (
         <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center">
@@ -489,6 +510,47 @@ export function CredentialsView({
         />
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Up/down controls next to a section heading (service group or "All logins"),
+ * revealed on hover at lg+. The parent heading row must carry `group/head`.
+ */
+function SectionMover({
+  label,
+  isFirst,
+  isLast,
+  onMove,
+}: {
+  label: string;
+  isFirst: boolean;
+  isLast: boolean;
+  onMove: (direction: -1 | 1) => void;
+}) {
+  const buttonClass =
+    "rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-30";
+  return (
+    <span className="ml-1 flex items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover/head:opacity-100 lg:group-focus-within/head:opacity-100">
+      <button
+        type="button"
+        onClick={() => onMove(-1)}
+        disabled={isFirst}
+        aria-label={`Move ${label} up`}
+        className={buttonClass}
+      >
+        <ChevronUp className="size-4" aria-hidden />
+      </button>
+      <button
+        type="button"
+        onClick={() => onMove(1)}
+        disabled={isLast}
+        aria-label={`Move ${label} down`}
+        className={buttonClass}
+      >
+        <ChevronDown className="size-4" aria-hidden />
+      </button>
+    </span>
   );
 }
 
