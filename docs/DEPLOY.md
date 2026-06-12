@@ -38,6 +38,21 @@ internal test.
    (Authentication → Emails → SMTP settings; e.g. Resend/Postmark), or tell
    people to prefer the 6-digit **code** flow and not spam "resend".
 
+6. **Email templates & the first-login email** (hosted projects don't read
+   `config.toml`, so set these in the dashboard once custom SMTP is on):
+   - Authentication → **Emails → Templates → Magic Link**: paste
+     `supabase/templates/magic_link.html` (renders the 6-digit `{{ .Token }}`
+     plus a sign-in button). Subject: `Your Webfolks sign-in code`.
+   - **Confirm signup**: paste the **same** HTML. A first-time user is created
+     on the fly, so Supabase sends the *confirmation* template for them, not
+     Magic Link — without this they get the default link-only email the first
+     time and the nice one only afterwards.
+   - Simplest alternative: Authentication → Providers → Email → turn **Confirm
+     email OFF**. The OTP itself proves the address, so new users are
+     auto-confirmed and always get the Magic Link template.
+   - Authentication → **Email OTP length = 6** (the login form accepts 6–8, but
+     6 keeps it tidy).
+
 ## 2. Vercel
 
 1. Push the branch to GitHub and merge to the repo's default branch

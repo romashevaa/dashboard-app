@@ -115,6 +115,13 @@
   }
 }
 
+/* Chrome shows a dropdown indicator on <input list> (datalist) fields, which
+ * looks like a stray arrow on hover. Hide it — the field is a normal text input
+ * with suggestions, not a picker. */
+input[list]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
 /* Themed, subtle scrollbars (matches the dark surfaces). */
 * {
   scrollbar-width: thin;

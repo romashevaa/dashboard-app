@@ -5,7 +5,7 @@ export default function EventsPage() {
     <SectionPlaceholder
       icon="calendar"
       title="Events"
-      description="Events and holidays calendar."
+      description="Team holidays, time off and upcoming events."
     />
   );
 }

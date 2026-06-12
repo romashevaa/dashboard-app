@@ -42,8 +42,7 @@ export default async function AdminPage() {
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Team members</h2>
           <p className="text-sm text-muted-foreground">
-            Everyone who has signed in. Role changes apply immediately —
-            enforced by the database, not just the UI.
+            Everyone who has signed in. Pick a role to change what they can do.
           </p>
         </div>
         <span className="rounded-full bg-white/[0.06] px-3 py-1 text-xs font-medium text-muted-foreground">

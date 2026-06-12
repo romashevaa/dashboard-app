@@ -42,13 +42,10 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
   if (showCodeStep) {
     return (
       <div className="flex flex-col gap-4">
-        <p
-          role="status"
-          className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground"
-        >
-          We emailed a sign-in link and a 6-digit code to{" "}
-          <span className="text-foreground">{reqState.email}</span>. Enter the
-          code below, or just click the link in the email.
+        <p role="status" className="text-sm text-muted-foreground">
+          Check{" "}
+          <span className="text-foreground">{reqState.email}</span> — enter the
+          code, or open the link in the email.
         </p>
 
         <form action={verifyAction} className="flex flex-col gap-4">
@@ -57,7 +54,7 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
 
           <div className="flex flex-col gap-2">
             <label htmlFor="token" className="text-sm font-medium">
-              6-digit code
+              Code
             </label>
             <input
               id="token"
@@ -65,7 +62,7 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
               inputMode="numeric"
               pattern="[0-9]*"
               autoComplete="one-time-code"
-              maxLength={6}
+              maxLength={8}
               minLength={6}
               required
               autoFocus
@@ -81,7 +78,7 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
           ) : null}
 
           <Button type="submit" size="xl" disabled={verPending}>
-            {verPending ? "Verifying…" : "Verify code"}
+            {verPending ? "Verifying…" : "Sign in"}
           </Button>
         </form>
 
@@ -135,7 +132,7 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
       ) : null}
 
       <Button type="submit" size="xl" disabled={reqPending}>
-        {reqPending ? "Sending…" : "Email me a link & code"}
+        {reqPending ? "Sending…" : "Send me a code"}
       </Button>
     </form>
   );

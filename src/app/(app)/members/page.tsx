@@ -5,7 +5,7 @@ export default function MembersPage() {
     <SectionPlaceholder
       icon="technologist"
       title="Members"
-      description="The team directory."
+      description="Find a teammate — roles, contacts and details."
     />
   );
 }

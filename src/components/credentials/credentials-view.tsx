@@ -449,7 +449,7 @@ export function CredentialsView({
         return (
           <section key={service} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <div className="group/head flex items-center gap-2">
+              <div className="group/head flex items-center gap-2.5">
                 <ServiceAvatar
                   name={service}
                   iconUrl={head?.iconUrl}
@@ -795,7 +795,7 @@ function CredentialRow({
         iconUrl={login.iconUrl}
         noIcon={login.noIcon}
       />
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="flex items-center gap-1 text-sm font-semibold text-foreground">
           <span className="truncate">{serviceLabel}</span>
           {!useAccountLabel && login.account ? (
@@ -842,12 +842,12 @@ function CredentialRow({
           target="_blank"
           rel="noreferrer"
           aria-label={`Open ${serviceLabel}`}
-          className="flex min-w-0 flex-1 items-center gap-2 rounded outline-none transition-colors hover:[&_p]:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+          className="flex min-w-0 flex-1 items-center gap-3 rounded outline-none transition-colors hover:[&_p]:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
         >
           {serviceInner}
         </a>
       ) : (
-        <div className="flex min-w-0 flex-1 items-center gap-2">{serviceInner}</div>
+        <div className="flex min-w-0 flex-1 items-center gap-3">{serviceInner}</div>
       )}
 
       <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">

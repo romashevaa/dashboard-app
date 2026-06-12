@@ -25,11 +25,10 @@ export default async function LoginPage({
           <WebfolksLogo className="h-7 self-start" />
           <div className="flex flex-col gap-1.5">
             <h1 className="text-xl font-semibold tracking-tight">
-              Sign in to the dashboard
+              Sign in
             </h1>
             <p className="text-sm text-muted-foreground">
-              Enter your work email and we&apos;ll send you a sign-in link and a
-              code — no password needed.
+              Use your Webfolks email — no password needed.
             </p>
           </div>
         </div>

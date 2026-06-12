@@ -98,8 +98,8 @@ export async function verifySignIn(
     return { error: "Use your Webfolks email address to sign in." };
   }
 
-  if (!/^\d{6}$/.test(token)) {
-    return { error: "Enter the 6-digit code from your email." };
+  if (!/^\d{6,8}$/.test(token)) {
+    return { error: "Enter the code from your email." };
   }
 
   const supabase = await createClient();

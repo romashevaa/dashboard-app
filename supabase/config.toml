@@ -255,7 +255,14 @@ otp_expiry = 3600
 # Magic-link / sign-in email: shows both a clickable link and the 6-digit code,
 # so users can sign in either way (see src/app/login).
 [auth.email.template.magic_link]
-subject = "Your Webfolks sign-in link & code"
+subject = "Your Webfolks sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
+# A first-time signing-in user is created on the fly, so Supabase sends the
+# CONFIRMATION email (not magic_link) for them. Point it at the same template
+# so the first email matches every later one (styled, 6-digit code).
+[auth.email.template.confirmation]
+subject = "Your Webfolks sign-in code"
 content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize notification email template

@@ -4,7 +4,8 @@ import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { ServiceAvatar, faviconFor } from "./service-avatar";
+import { ServiceAvatar } from "./service-avatar";
+import { faviconFor, serviceNameFromUrl } from "@/lib/credentials/favicon";
 
 export type CredentialDraft = {
   service: string;
@@ -78,6 +79,9 @@ export function CredentialModal({
   const [showNote, setShowNote] = useState(Boolean(initial?.note));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The name we last auto-derived from the URL. While the Service field still
+  // equals it, keep tracking the URL; once the user edits the name, stop.
+  const [autoName, setAutoName] = useState("");
 
   const iconUrl = noIcon
     ? undefined
@@ -87,14 +91,45 @@ export function CredentialModal({
   const canSubmit =
     Boolean(service.trim() && username.trim() && password.trim()) && !submitting;
 
+  function handleUrlChange(value: string) {
+    setUrl(value);
+    // Suggest the service name from the domain while the user hasn't typed
+    // their own (or has only accepted previous suggestions).
+    if (!service.trim() || service === autoName) {
+      const guess = serviceNameFromUrl(value) ?? "";
+      setService(guess);
+      setAutoName(guess);
+    }
+  }
+
+  function handleServiceChange(value: string) {
+    setService(value);
+    // Joining an existing service: inherit its site + icon choice so a new
+    // login doesn't have to re-enter (or accidentally clear) them.
+    const match = serviceDetails?.[value.trim().toLowerCase()];
+    if (match && !url) {
+      if (match.url) setUrl(match.url);
+      setNoIcon(match.noIcon ?? false);
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
+    // A label that just repeats the service name adds no info — drop it so the
+    // login keeps showing under the service/group name.
+    const trimmedService = service.trim();
+    const trimmedAccount = account.trim();
+    const finalAccount =
+      trimmedAccount &&
+      trimmedAccount.toLowerCase() !== trimmedService.toLowerCase()
+        ? trimmedAccount
+        : undefined;
     const result = await onSubmit({
-      service: service.trim(),
-      account: account.trim() || undefined,
+      service: trimmedService,
+      account: finalAccount,
       username: username.trim(),
       password,
       url: url.trim() || undefined,
@@ -125,33 +160,33 @@ export function CredentialModal({
             noIcon={noIcon}
             className="size-11 text-base"
           />
-          <Field label="Service" className="flex-1">
+          <Field label="Login page URL" hint="sets the icon & name" className="flex-1">
             <input
-              list={listId}
-              value={service}
-              onChange={(e) => {
-                const value = e.target.value;
-                setService(value);
-                // Joining an existing service: inherit its site/icon so a new
-                // login doesn't have to re-enter (or accidentally clear) them.
-                const match = serviceDetails?.[value.trim().toLowerCase()];
-                if (match && !url) {
-                  if (match.url) setUrl(match.url);
-                  setNoIcon(match.noIcon ?? false);
-                }
-              }}
-              placeholder="e.g. Webflow, Claude"
-              autoFocus
-              required
+              type="url"
+              value={url}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              placeholder="https://webflow.com/login"
+              autoFocus={!isEdit}
               className={inputClass}
             />
-            <datalist id={listId}>
-              {services.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
           </Field>
         </div>
+
+        <Field label="Service / Group" hint="groups logins for the same site">
+          <input
+            list={listId}
+            value={service}
+            onChange={(e) => handleServiceChange(e.target.value)}
+            placeholder="e.g. Webflow"
+            required
+            className={inputClass}
+          />
+          <datalist id={listId}>
+            {services.map((s) => (
+              <option key={s} value={s} />
+            ))}
+          </datalist>
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Username">
@@ -174,25 +209,14 @@ export function CredentialModal({
           </Field>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Account label" hint="optional">
-            <input
-              value={account}
-              onChange={(e) => setAccount(e.target.value)}
-              placeholder="e.g. DevAccount"
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Website URL" hint="fetches the icon">
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://webflow.com"
-              className={inputClass}
-            />
-          </Field>
-        </div>
+        <Field label="Account label" hint="only when a group has 2+ logins">
+          <input
+            value={account}
+            onChange={(e) => setAccount(e.target.value)}
+            placeholder="e.g. Dev account"
+            className={inputClass}
+          />
+        </Field>
 
         <label className="flex items-center gap-2 text-sm">
           <input

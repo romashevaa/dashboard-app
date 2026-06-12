@@ -5,7 +5,7 @@ export default function LinksPage() {
     <SectionPlaceholder
       icon="link"
       title="Links"
-      description="Doc, brand, and social links."
+      description="Shared docs, brand assets and social profiles."
     />
   );
 }

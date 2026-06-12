@@ -5,7 +5,7 @@ export default function ResourcesPage() {
     <SectionPlaceholder
       icon="unicorn"
       title="Resources"
-      description="The resources and learning library."
+      description="Guides, tools and learning links for the team."
     />
   );
 }

@@ -5,7 +5,7 @@ export default function TemplatesPage() {
     <SectionPlaceholder
       icon="writing-hand"
       title="Message templates"
-      description="Reusable message templates."
+      description="Ready-to-use message templates for common replies."
     />
   );
 }
