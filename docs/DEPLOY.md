@@ -67,6 +67,7 @@ internal test.
    | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | same page → `anon` `public` key |
    | `NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS` | `webfolks.io` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | same page → `service_role` `secret` key. **Server-only — never expose to the browser.** Needed for admin user removal. |
 
 4. Deploy. Copy the production URL back into Supabase's Site URL + Redirect
    URLs (step 1.4).

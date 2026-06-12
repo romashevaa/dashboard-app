@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/db/types";
 import { RoleForm } from "./role-form";
+import { RemoveUserButton } from "./remove-user-button";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -85,11 +86,19 @@ export default async function AdminPage() {
                 Joined {joinedFormat.format(new Date(profile.created_at))}
               </span>
 
-              <RoleForm
-                userId={profile.id}
-                currentRole={profile.role}
-                isSelf={isSelf}
-              />
+              <div className="flex items-center gap-1.5">
+                <RoleForm
+                  userId={profile.id}
+                  currentRole={profile.role}
+                  isSelf={isSelf}
+                />
+                {isSelf ? (
+                  // Keep the role selects aligned across rows.
+                  <span className="size-8 shrink-0" aria-hidden />
+                ) : (
+                  <RemoveUserButton userId={profile.id} name={name} />
+                )}
+              </div>
             </div>
           );
         })}
