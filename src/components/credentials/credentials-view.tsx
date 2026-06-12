@@ -343,7 +343,9 @@ export function CredentialsView({
           <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
           <input
             ref={searchRef}
-            type="search"
+            type="text"
+            inputMode="search"
+            enterKeyHint="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -354,7 +356,7 @@ export function CredentialsView({
             }}
             placeholder="Search by service or username…"
             aria-label="Search credentials"
-            className="min-w-0 flex-1 appearance-none bg-transparent text-base text-foreground outline-none placeholder:text-white/40 md:text-sm [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
+            className="min-w-0 flex-1 appearance-none bg-transparent text-base text-foreground outline-none placeholder:text-white/40 md:text-sm"
           />
           {query ? (
             <button
