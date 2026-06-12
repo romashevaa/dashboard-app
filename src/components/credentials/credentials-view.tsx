@@ -784,11 +784,10 @@ function CredentialRow({
     isDragging,
   } = useSortable({ id: login.id, disabled: !sortable });
   const serviceLabel = useAccountLabel ? login.account ?? login.service : login.service;
-  // A second line under the name (a note, or the account subtitle on singles)
-  // makes the cell taller — then top-align the icon; otherwise center it.
-  const hasSubtitle =
-    Boolean(login.note) || (!useAccountLabel && Boolean(login.account));
-  const serviceAlign = hasSubtitle ? "items-start" : "items-center";
+  // Top-align the icon only when there's a note (taller, and it can wrap). The
+  // short account subtitle on singles still looks right with the icon centered.
+  const topAlignIcon = Boolean(login.note);
+  const serviceAlign = topAlignIcon ? "items-start" : "items-center";
   // Below lg the rows stack into cards (actions always visible); at lg they
   // become table columns where actions reveal on hover or keyboard focus.
   const reveal =
@@ -800,7 +799,7 @@ function CredentialRow({
         name={login.service}
         iconUrl={login.iconUrl}
         noIcon={login.noIcon}
-        className={hasSubtitle ? "mt-0.5" : undefined}
+        className={topAlignIcon ? "mt-0.5" : undefined}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="flex items-center gap-1 text-sm font-semibold text-foreground">
