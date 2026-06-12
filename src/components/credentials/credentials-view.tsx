@@ -843,12 +843,12 @@ function CredentialRow({
           target="_blank"
           rel="noreferrer"
           aria-label={`Open ${serviceLabel}`}
-          className="flex min-w-0 flex-1 items-center gap-3 rounded outline-none transition-colors hover:[&_p]:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+          className="flex min-w-0 flex-1 items-start gap-3 rounded outline-none transition-colors hover:[&_p]:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
         >
           {serviceInner}
         </a>
       ) : (
-        <div className="flex min-w-0 flex-1 items-center gap-3">{serviceInner}</div>
+        <div className="flex min-w-0 flex-1 items-start gap-3">{serviceInner}</div>
       )}
 
       <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
