@@ -784,6 +784,11 @@ function CredentialRow({
     isDragging,
   } = useSortable({ id: login.id, disabled: !sortable });
   const serviceLabel = useAccountLabel ? login.account ?? login.service : login.service;
+  // A second line under the name (a note, or the account subtitle on singles)
+  // makes the cell taller — then top-align the icon; otherwise center it.
+  const hasSubtitle =
+    Boolean(login.note) || (!useAccountLabel && Boolean(login.account));
+  const serviceAlign = hasSubtitle ? "items-start" : "items-center";
   // Below lg the rows stack into cards (actions always visible); at lg they
   // become table columns where actions reveal on hover or keyboard focus.
   const reveal =
@@ -795,7 +800,7 @@ function CredentialRow({
         name={login.service}
         iconUrl={login.iconUrl}
         noIcon={login.noIcon}
-        className="mt-0.5"
+        className={hasSubtitle ? "mt-0.5" : undefined}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="flex items-center gap-1 text-sm font-semibold text-foreground">
@@ -844,12 +849,15 @@ function CredentialRow({
           target="_blank"
           rel="noreferrer"
           aria-label={`Open ${serviceLabel}`}
-          className="flex min-w-0 flex-1 items-start gap-3 rounded outline-none transition-colors hover:[&_p]:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+          className={cn(
+            "flex min-w-0 flex-1 gap-3 rounded outline-none transition-colors hover:[&_p]:text-white focus-visible:ring-2 focus-visible:ring-ring/60",
+            serviceAlign
+          )}
         >
           {serviceInner}
         </a>
       ) : (
-        <div className="flex min-w-0 flex-1 items-start gap-3">{serviceInner}</div>
+        <div className={cn("flex min-w-0 flex-1 gap-3", serviceAlign)}>{serviceInner}</div>
       )}
 
       <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
