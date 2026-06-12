@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, Loader2, Trash2, X } from "lucide-react";
+import { Check, Loader2, Trash2, TriangleAlert, X } from "lucide-react";
 
 import { removeUser } from "./actions";
 
@@ -31,6 +31,27 @@ export function RemoveUserButton({
       // On success the row disappears (revalidate), so no state to reset.
     });
   };
+
+  if (error) {
+    return (
+      <span className="flex items-center gap-1.5">
+        <TriangleAlert className="size-4 shrink-0 text-destructive" aria-hidden />
+        <span
+          className="max-w-[14rem] truncate text-xs text-destructive"
+          title={error}
+        >
+          {error}
+        </span>
+        <button
+          type="button"
+          onClick={() => setError(null)}
+          className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-white hover:underline"
+        >
+          Retry
+        </button>
+      </span>
+    );
+  }
 
   if (confirming) {
     return (
