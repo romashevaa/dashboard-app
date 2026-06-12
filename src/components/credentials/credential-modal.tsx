@@ -11,7 +11,7 @@ export type CredentialDraft = {
   service: string;
   account?: string;
   username: string;
-  password: string;
+  password?: string;
   url?: string;
   iconUrl?: string;
   noIcon?: boolean;
@@ -88,8 +88,9 @@ export function CredentialModal({
     : url
       ? faviconFor(url)
       : initial?.iconUrl;
+  // Password is optional — some services are entered with just an email/login.
   const canSubmit =
-    Boolean(service.trim() && username.trim() && password.trim()) && !submitting;
+    Boolean(service.trim() && username.trim()) && !submitting;
 
   function handleUrlChange(value: string) {
     setUrl(value);
@@ -189,21 +190,20 @@ export function CredentialModal({
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Username">
+          <Field label="Username / login">
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="username"
+              placeholder="email or username"
               required
               className={inputClass}
             />
           </Field>
-          <Field label="Password">
+          <Field label="Password" hint="optional">
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="password"
-              required
+              placeholder="leave blank if none"
               className={inputClass}
             />
           </Field>

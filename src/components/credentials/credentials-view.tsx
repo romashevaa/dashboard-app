@@ -63,7 +63,8 @@ type Login = {
   /** Account label shown instead of the service name (for grouped services). */
   account?: string;
   username: string;
-  password: string;
+  /** Optional — some services are entered with just an email/login. */
+  password?: string;
   url?: string;
   iconUrl?: string;
   noIcon?: boolean;
@@ -77,7 +78,7 @@ function toLogin(record: CredentialRecord): Login {
     service: record.service,
     account: record.account ?? undefined,
     username: record.username,
-    password: record.password,
+    password: record.password ?? undefined,
     url: record.url ?? undefined,
     iconUrl: record.iconUrl ?? undefined,
     noIcon: record.noIcon,
@@ -90,7 +91,7 @@ function draftToInput(draft: CredentialDraft): CredentialInput {
     service: draft.service,
     account: draft.account ?? null,
     username: draft.username,
-    password: draft.password,
+    password: draft.password ?? null,
     url: draft.url ?? null,
     noIcon: draft.noIcon ?? false,
     note: draft.note ?? null,
@@ -724,7 +725,7 @@ function CredentialTable({
       <div className="hidden gap-4 px-3 text-xs font-semibold uppercase tracking-wider text-white/40 @2xl:flex">
         <span className="flex-1">Service</span>
         <span className="flex flex-1 items-center gap-1.5">
-          <User className="size-4" aria-hidden /> User name
+          <User className="size-4" aria-hidden /> Username / login
         </span>
         <span className="flex flex-1 items-center gap-1.5">
           <Lock className="size-4" aria-hidden /> Password
@@ -944,6 +945,15 @@ function PasswordCell({
   revealClass: string;
 }) {
   const [shown, setShown] = useState(false);
+
+  // Email-only logins have no password to show.
+  if (!login.password) {
+    return (
+      <span className="text-muted-foreground/50" aria-label="No password">
+        —
+      </span>
+    );
+  }
 
   const toggle = () => {
     // The audit call must stay outside the setState updater — updaters have

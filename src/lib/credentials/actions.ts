@@ -13,7 +13,7 @@ export type CredentialInput = {
   service: string;
   account?: string | null;
   username: string;
-  password: string;
+  password?: string | null;
   url?: string | null;
   noIcon: boolean;
   note?: string | null;
@@ -123,8 +123,8 @@ async function pruneOrphanService(supabase: SupabaseClient, serviceId: string) {
 
 function validate(input: CredentialInput): string | null {
   if (!input.service.trim()) return "A service name is required.";
-  if (!input.username.trim()) return "A username is required.";
-  if (!input.password.trim()) return "A password is required.";
+  // Password is optional (some services are email-only); a login is required.
+  if (!input.username.trim()) return "A username or login is required.";
   return null;
 }
 
@@ -154,7 +154,7 @@ export async function createCredential(
       service_id: service.id,
       account: clean(input.account),
       username: input.username.trim(),
-      password: input.password,
+      password: clean(input.password),
       note: clean(input.note),
       sort_order: (lastRow?.sort_order ?? 0) + 1,
     })
@@ -223,7 +223,7 @@ export async function updateCredential(
       service_id: service.id,
       account: clean(input.account),
       username: input.username.trim(),
-      password: input.password,
+      password: clean(input.password),
       note: clean(input.note),
       ...(sortOrder !== undefined ? { sort_order: sortOrder } : {}),
     })
@@ -242,7 +242,7 @@ export async function updateCredential(
   const changed: string[] = [];
   if (clean(before.account) !== clean(input.account)) changed.push("account");
   if (before.username !== input.username.trim()) changed.push("username");
-  if (before.password !== input.password) changed.push("password");
+  if (clean(before.password) !== clean(input.password)) changed.push("password");
   if (clean(before.note) !== clean(input.note)) changed.push("note");
   if ((beforeService?.name ?? "") !== input.service.trim())
     changed.push("service");

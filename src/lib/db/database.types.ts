@@ -63,7 +63,7 @@ export type Database = {
           service_id: string;
           account: string | null;
           username: string;
-          password: string;
+          password: string | null;
           note: string | null;
           sort_order: number;
           created_at: string;
@@ -74,7 +74,7 @@ export type Database = {
           service_id: string;
           account?: string | null;
           username: string;
-          password: string;
+          password?: string | null;
           note?: string | null;
           sort_order?: number;
           created_at?: string;
@@ -85,7 +85,7 @@ export type Database = {
           service_id?: string;
           account?: string | null;
           username?: string;
-          password?: string;
+          password?: string | null;
           note?: string | null;
           sort_order?: number;
           created_at?: string;

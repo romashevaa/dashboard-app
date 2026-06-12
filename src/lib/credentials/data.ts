@@ -13,7 +13,7 @@ export type CredentialRecord = {
   service: string;
   account: string | null;
   username: string;
-  password: string;
+  password: string | null;
   url: string | null;
   iconUrl: string | null;
   noIcon: boolean;
