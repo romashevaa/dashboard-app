@@ -337,7 +337,7 @@ export function CredentialsView({
   const empty = groups.length === 0 && singles.length === 0;
 
   return (
-    <div className="@container flex flex-col gap-8">
+    <div className="@container flex flex-col gap-6 sm:gap-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex h-12 flex-1 items-center gap-2 rounded-lg border border-white/[0.06] bg-background px-4 transition-colors focus-within:border-ring/60">
           <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
@@ -354,7 +354,7 @@ export function CredentialsView({
             }}
             placeholder="Search by service or username…"
             aria-label="Search credentials"
-            className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-white/40 md:text-sm [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
+            className="min-w-0 flex-1 appearance-none bg-transparent text-base text-foreground outline-none placeholder:text-white/40 md:text-sm [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           />
           {query ? (
             <button
