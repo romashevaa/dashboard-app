@@ -339,7 +339,7 @@ export function CredentialsView({
   return (
     <div className="@container flex flex-col gap-6 sm:gap-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex h-12 flex-1 items-center gap-2 rounded-lg border border-white/[0.06] bg-background px-4 transition-colors focus-within:border-ring/60">
+        <div className="flex h-12 flex-1 items-center gap-2 rounded-lg border border-input bg-background px-4 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
           <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
           <input
             ref={searchRef}
