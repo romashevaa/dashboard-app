@@ -79,8 +79,11 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
     }
   }, [reqState.status, reqState.email]);
 
-  // Keep the countdown live while a cooldown is active.
-  const email = reqState.email ?? pending?.email ?? null;
+  // A code is only actually pending after a SUCCESSFUL send (status "sent") or
+  // a restored session — never after an errored request (e.g. a wrong-domain
+  // address), which still carries reqState.email.
+  const sentEmail = reqState.status === "sent" ? (reqState.email ?? null) : null;
+  const email = sentEmail ?? pending?.email ?? null;
   const sentAt = pending?.sentAt ?? null;
   const secondsLeft = sentAt
     ? Math.max(0, Math.ceil((sentAt + RESEND_MS - now) / 1000))
