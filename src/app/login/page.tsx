@@ -10,20 +10,13 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ redirectTo?: string; error?: string }>;
+  searchParams: Promise<{ redirectTo?: string }>;
 }) {
-  const { redirectTo, error } = await searchParams;
+  const { redirectTo } = await searchParams;
   const safeRedirect =
     redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
       ? redirectTo
       : "/";
-
-  const authError =
-    error === "domain"
-      ? "That address isn't a Webfolks email."
-      : error === "auth"
-        ? "That sign-in link didn't work or has expired. Enter the code from your email, or request a new one."
-        : null;
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-surface px-4">
@@ -38,7 +31,7 @@ export default async function LoginPage({
           </div>
         </div>
 
-        <LoginForm redirectTo={safeRedirect} authError={authError} />
+        <LoginForm redirectTo={safeRedirect} />
       </div>
     </main>
   );
