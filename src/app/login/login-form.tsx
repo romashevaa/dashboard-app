@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { SIGN_IN_STORAGE_KEY } from "@/lib/auth/sign-in-storage";
 import {
   requestSignIn,
   verifySignIn,
@@ -15,7 +16,7 @@ const verifyInit: VerifyState = {};
 
 // Remember the pending sign-in across reloads so a refresh doesn't kick the
 // user back to the email step (the emailed code stays valid server-side).
-const STORAGE_KEY = "wf_signin";
+const STORAGE_KEY = SIGN_IN_STORAGE_KEY;
 const OTP_TTL_MS = 60 * 60 * 1000; // codes are valid ~1h
 const RESEND_MS = 30 * 1000; // min gap between code requests
 

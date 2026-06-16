@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PageTitle } from "@/components/layout/page-title";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { ClearPendingSignIn } from "@/components/auth/clear-pending-sign-in";
 import { getViewerContext } from "@/lib/auth/profile";
 import type { Profile } from "@/lib/db/types";
 
@@ -42,6 +43,7 @@ export default async function AppLayout({
 
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
+      <ClearPendingSignIn />
       <Sidebar
         isAdmin={isAdmin}
         isRealAdmin={isRealAdmin}
