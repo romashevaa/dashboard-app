@@ -7,18 +7,19 @@
  * non-allowed address. This module mirrors that check at the app layer
  * for fast UX feedback on the login screen — it is NOT the sole guard.
  *
- * Configure via NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS (comma-separated). The
- * default below matches the corporate domain inferred from the team's
- * addresses; confirm/adjust before going live.
+ * The corporate domain is ALWAYS enforced so the gate can never be weakened
+ * by a missing/empty env var. NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS (comma-
+ * separated) can only ADD extra domains, never remove the corporate one.
  */
-const DEFAULT_ALLOWED_DOMAINS = ["webfolks.io"];
+const CORPORATE_DOMAINS = ["webfolks.io"];
 
 export function getAllowedDomains(): string[] {
-  const fromEnv = process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS;
-  const domains = (fromEnv ? fromEnv.split(",") : DEFAULT_ALLOWED_DOMAINS)
+  const fromEnv = (process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS ?? "")
+    .split(",")
     .map((d) => d.trim().toLowerCase())
     .filter(Boolean);
-  return domains.length > 0 ? domains : DEFAULT_ALLOWED_DOMAINS;
+  // De-duplicate; the corporate domain is always present.
+  return [...new Set([...CORPORATE_DOMAINS, ...fromEnv])];
 }
 
 export function isAllowedEmail(email: string): boolean {
@@ -28,3 +29,4 @@ export function isAllowedEmail(email: string): boolean {
   const domain = normalized.slice(at + 1);
   return getAllowedDomains().includes(domain);
 }
+
