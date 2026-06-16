@@ -485,7 +485,11 @@ export function CredentialsView({
       })}
 
       {empty ? (
-        <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center">
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center"
+        >
           <p className="text-sm text-muted-foreground">
             {query ? (
               <>No credentials match “{query}”.</>

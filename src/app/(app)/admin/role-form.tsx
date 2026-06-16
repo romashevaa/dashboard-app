@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import { Check, ChevronDown, Loader2, TriangleAlert } from "lucide-react";
 
 import { APP_ROLES, type AppRole } from "@/lib/db/types";
@@ -26,6 +26,7 @@ export function RoleForm({
     updateUserRole,
     initialState
   );
+  const errorId = useId();
 
   return (
     <form
@@ -56,6 +57,7 @@ export function RoleForm({
           defaultValue={currentRole}
           disabled={isSelf || pending}
           aria-label="Role"
+          aria-describedby={state.error ? errorId : undefined}
           title={isSelf ? "You can't change your own role" : undefined}
           onChange={(e) => e.currentTarget.form?.requestSubmit()}
           className="h-9 w-full appearance-none rounded-md border border-input bg-background pl-3 pr-9 text-sm capitalize outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50 sm:w-32"
@@ -73,7 +75,7 @@ export function RoleForm({
       </span>
 
       {state.error ? (
-        <span role="alert" className="text-xs text-destructive">
+        <span id={errorId} role="alert" className="text-xs text-destructive">
           {state.error}
         </span>
       ) : null}

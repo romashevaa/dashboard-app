@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -27,30 +27,41 @@ export function CopyText({
   /** Fired once after the value is successfully copied. */
   onCopy?: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(value);
-      setCopied(true);
+      setState("copied");
       onCopy?.();
-      setTimeout(() => setCopied(false), 1500);
+      setTimeout(() => setState("idle"), 1500);
     } catch {
-      // Clipboard unavailable (e.g. insecure context) — no-op.
+      // Clipboard can be unavailable (insecure context, denied permission).
+      setState("failed");
+      setTimeout(() => setState("idle"), 2000);
     }
   }
+
+  const title =
+    state === "copied"
+      ? "Copied"
+      : state === "failed"
+        ? "Couldn't copy — copy manually"
+        : `Copy ${label}`;
 
   return (
     <button
       type="button"
       onClick={copy}
       aria-label={`Copy ${label}`}
-      title={copied ? "Copied" : `Copy ${label}`}
+      title={title}
       className="inline-flex min-w-0 max-w-full items-center gap-2 rounded text-left outline-none transition-colors hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
     >
       <span className="truncate">{display ?? value}</span>
-      {copied ? (
+      {state === "copied" ? (
         <Check className="size-4 shrink-0 text-brand-light" aria-hidden />
+      ) : state === "failed" ? (
+        <X className="size-4 shrink-0 text-destructive" aria-hidden />
       ) : (
         <Copy
           className={cn("size-4 shrink-0 text-muted-foreground", iconClassName)}
@@ -60,3 +71,4 @@ export function CopyText({
     </button>
   );
 }
+

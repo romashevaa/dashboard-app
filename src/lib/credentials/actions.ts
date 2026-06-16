@@ -75,7 +75,7 @@ async function resolveService(
       .eq("id", existing.id);
     if (error) {
       console.error("[credentials] update service failed:", error);
-      return { error: `Couldn't save the service: ${error.message}` };
+      return { error: "Couldn't save the service. Please try again." };
     }
     return { id: existing.id };
   }
@@ -101,11 +101,7 @@ async function resolveService(
     .single();
   if (error || !created) {
     console.error("[credentials] create service failed:", error);
-    return {
-      error: error
-        ? `Couldn't create the service: ${error.message}`
-        : "Couldn't create the service.",
-    };
+    return { error: "Couldn't create the service. Please try again." };
   }
   return { id: created.id };
 }
@@ -163,11 +159,7 @@ export async function createCredential(
 
   if (error || !created) {
     console.error("[credentials] create credential failed:", error);
-    return {
-      error: error
-        ? `Couldn't add the credential: ${error.message}`
-        : "Couldn't add the credential.",
-    };
+    return { error: "Couldn't add the credential. Please try again." };
   }
 
   // Audit: identifiers only — never the username/password values.
@@ -411,7 +403,7 @@ export async function logCredentialReveal(id: string): Promise<void> {
     .single();
 
   const svc = Array.isArray(row?.service) ? row?.service[0] : row?.service;
-  await supabase.rpc("record_audit_event", {
+  const { error } = await supabase.rpc("record_audit_event", {
     p_action: "reveal",
     p_entity_type: "credential",
     p_entity_id: id,
@@ -421,4 +413,6 @@ export async function logCredentialReveal(id: string): Promise<void> {
       field: "password",
     },
   });
+  // Fire-and-forget for the user, but surface a missed audit write in the logs.
+  if (error) console.error("[credentials] reveal audit failed:", error.message);
 }
