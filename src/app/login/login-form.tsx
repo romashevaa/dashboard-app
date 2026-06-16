@@ -69,6 +69,8 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
       const next = { email: reqState.email, sentAt: Date.now() };
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sync to localStorage on send
       setPending(next);
+      // Reset the countdown base so it reads 30s immediately (not a stale value).
+      setNow(next.sentAt);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       } catch {
@@ -97,6 +99,21 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
     setPending(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // Restart the cooldown the instant a resend is submitted. The persist effect
+  // above only fires on a status *transition*, so a repeat send (status stays
+  // "sent") wouldn't reset it — stamp it here, with `now` in sync.
+  function stampResend() {
+    if (!email) return;
+    const next = { email, sentAt: Date.now() };
+    setPending(next);
+    setNow(next.sentAt);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
       /* ignore */
     }
@@ -148,7 +165,7 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
 
         <div className="flex items-center justify-between">
           {/* Resend re-runs the request action with the same email. */}
-          <form action={requestAction}>
+          <form action={requestAction} onSubmit={stampResend}>
             <input type="hidden" name="email" value={email ?? ""} />
             <input type="hidden" name="redirectTo" value={redirectTo} />
             <button
