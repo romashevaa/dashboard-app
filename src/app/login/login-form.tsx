@@ -44,7 +44,14 @@ const inputClass =
 const linkButtonClass =
   "text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-50 disabled:no-underline";
 
-export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
+export function LoginForm({
+  redirectTo = "/",
+  authError = null,
+}: {
+  redirectTo?: string;
+  /** Error from the magic-link callback (?error=auth|domain), shown inline. */
+  authError?: string | null;
+}) {
   const router = useRouter();
   const [reqState, requestAction, reqPending] = useActionState(
     requestSignIn,
@@ -160,11 +167,21 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
     }
   }
 
+  const authBanner = authError ? (
+    <p
+      role="alert"
+      className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+    >
+      {authError}
+    </p>
+  ) : null;
+
   // Step 2: code entry (the email also contains a clickable magic link).
   if (showCodeStep) {
     const resendDisabled = reqPending || secondsLeft > 0;
     return (
       <div className="flex flex-col gap-4">
+        {authBanner}
         <p role="status" className="text-sm text-muted-foreground">
           Check <span className="text-foreground">{email}</span> — enter the
           code, or open the link in the email.
@@ -238,6 +255,7 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
   return (
     <form action={requestAction} className="flex flex-col gap-4">
       <input type="hidden" name="redirectTo" value={redirectTo} />
+      {authBanner}
 
       <div className="flex flex-col gap-2">
         <label htmlFor="email" className="text-sm font-medium">
