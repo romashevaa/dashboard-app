@@ -16,6 +16,19 @@ export type VerifyState = {
   error?: string;
 };
 
+/**
+ * Whether the visitor now has a session. Polled by the login screen so that if
+ * the user opens the magic link in another tab (the session cookie is shared),
+ * the original tab auto-advances into the app instead of being left behind.
+ */
+export async function checkSignedIn(): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return Boolean(user);
+}
+
 /** Only allow same-origin, absolute-path redirects (no open redirects). */
 function sanitizeRedirect(value: string | null): string {
   if (value && value.startsWith("/") && !value.startsWith("//")) return value;

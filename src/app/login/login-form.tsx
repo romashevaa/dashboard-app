@@ -1,10 +1,12 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { SIGN_IN_STORAGE_KEY } from "@/lib/auth/sign-in-storage";
 import {
+  checkSignedIn,
   requestSignIn,
   verifySignIn,
   type RequestState,
@@ -43,6 +45,7 @@ const linkButtonClass =
   "text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-50 disabled:no-underline";
 
 export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
+  const router = useRouter();
   const [reqState, requestAction, reqPending] = useActionState(
     requestSignIn,
     requestInit
@@ -97,6 +100,40 @@ export function LoginForm({ redirectTo = "/" }: { redirectTo?: string }) {
   }, [secondsLeft]);
 
   const showCodeStep = Boolean(email) && email !== editedEmail;
+
+  // While waiting on the code step, watch for the session appearing — e.g. the
+  // user opened the magic link in another tab (the cookie is shared). When it
+  // does, advance this tab into the app so it isn't left on the login screen.
+  useEffect(() => {
+    if (!showCodeStep) return;
+
+    let active = true;
+    const deadline = Date.now() + 10 * 60 * 1000; // stop after 10 min
+
+    const check = async () => {
+      if (!active || Date.now() > deadline) return;
+      if (await checkSignedIn()) {
+        if (!active) return;
+        router.replace(redirectTo);
+        router.refresh();
+      }
+    };
+
+    const id = setInterval(check, 3000);
+    // Re-check immediately when the user switches back to this tab.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void check();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
+    return () => {
+      active = false;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [showCodeStep, redirectTo, router]);
 
   function forgetPending() {
     setEditedEmail(email);
