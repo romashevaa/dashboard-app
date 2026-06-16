@@ -86,7 +86,7 @@ export default async function AdminPage() {
                 Joined {joinedFormat.format(new Date(profile.created_at))}
               </span>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-3">
                 <RoleForm
                   userId={profile.id}
                   currentRole={profile.role}
