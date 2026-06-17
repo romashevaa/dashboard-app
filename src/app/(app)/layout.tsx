@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { ClearPendingSignIn } from "@/components/auth/clear-pending-sign-in";
 import { WelcomeModal } from "@/components/profile/welcome-modal";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { getViewerContext } from "@/lib/auth/profile";
 import { isProfileComplete, type Profile } from "@/lib/db/types";
 
@@ -16,11 +17,6 @@ function displayName(profile: Profile): string {
     profile.full_name?.trim() || profile.email.split("@")[0] || profile.email;
   // Always start with a capital letter (email-derived names are lowercase).
   return base.charAt(0).toUpperCase() + base.slice(1);
-}
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).slice(0, 2);
-  return parts.map((p) => p[0]?.toUpperCase() ?? "").join("") || "?";
 }
 
 /**
@@ -75,9 +71,13 @@ export default async function AppLayout({
                     ? "Your profile"
                     : "Your profile — complete your details"
                 }
-                className="relative grid size-9 place-items-center rounded-md bg-white/10 text-sm font-semibold text-white outline-none transition-colors hover:bg-white/[0.16] focus-visible:ring-2 focus-visible:ring-ring/60"
+                className="relative rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
               >
-                {initials(name)}
+                <UserAvatar
+                  name={name}
+                  src={profile.avatar_url}
+                  className="size-9 rounded-md bg-white/10 text-sm transition-colors hover:bg-white/[0.16]"
+                />
                 {!profileComplete ? (
                   <span
                     aria-hidden

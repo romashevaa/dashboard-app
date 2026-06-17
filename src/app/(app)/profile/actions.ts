@@ -80,3 +80,20 @@ export async function dismissWelcome(): Promise<void> {
 
   revalidatePath("/", "layout");
 }
+
+/**
+ * Records the user's avatar URL (the file is uploaded to storage client-side,
+ * which keeps large images off the server-action body). Pass null to remove.
+ */
+export async function setAvatar(url: string | null): Promise<void> {
+  const profile = await getCurrentProfile();
+  if (!profile) return;
+
+  const supabase = await createClient();
+  await supabase
+    .from("profiles")
+    .update({ avatar_url: url })
+    .eq("id", profile.id);
+
+  revalidatePath("/", "layout");
+}
