@@ -134,7 +134,7 @@ export async function importFromSlack(
 
   if (error) {
     console.error("[profile] slack import save failed:", error.message);
-    return { error: "Couldn't save the imported details." };
+    return { error: `Couldn't save: ${error.message}` };
   }
 
   revalidatePath("/", "layout");
