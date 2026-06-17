@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Gift } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { EmojiIcon } from "@/components/ui/emoji-icon";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import type { Profile } from "@/lib/db/types";
 import { memberSocials } from "./social-icons";
@@ -94,7 +95,7 @@ export function MemberCard({ member }: { member: Member }) {
             </p>
             {member.birthdate ? (
               <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Gift className="size-3.5 text-accent-yellow" aria-hidden />
+                <EmojiIcon name="gift" size={14} />
                 {birthdayFormat.format(new Date(member.birthdate))}
               </p>
             ) : null}
