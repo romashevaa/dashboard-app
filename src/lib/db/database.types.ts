@@ -144,6 +144,7 @@ export type Database = {
           last_name: string | null;
           position: string | null;
           birthdate: string | null;
+          hire_date: string | null;
           phone: string | null;
           telegram: string | null;
           welcomed_at: string | null;
@@ -160,6 +161,7 @@ export type Database = {
           last_name?: string | null;
           position?: string | null;
           birthdate?: string | null;
+          hire_date?: string | null;
           phone?: string | null;
           telegram?: string | null;
           welcomed_at?: string | null;
@@ -176,6 +178,7 @@ export type Database = {
           last_name?: string | null;
           position?: string | null;
           birthdate?: string | null;
+          hire_date?: string | null;
           phone?: string | null;
           telegram?: string | null;
           welcomed_at?: string | null;

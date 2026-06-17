@@ -31,6 +31,7 @@ export async function updateMyProfile(
   const lastName = clean(formData.get("last_name"));
   const position = clean(formData.get("position"));
   const birthdate = clean(formData.get("birthdate"));
+  const hireDate = clean(formData.get("hire_date"));
   const phone = clean(formData.get("phone"));
   const telegram = clean(formData.get("telegram"));
 
@@ -48,6 +49,7 @@ export async function updateMyProfile(
       last_name: lastName,
       position,
       birthdate,
+      hire_date: hireDate,
       phone,
       telegram,
       full_name: fullName,

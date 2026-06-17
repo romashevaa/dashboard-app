@@ -89,6 +89,18 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             className={inputClass}
           />
         </Field>
+        <Field label="Hire date" htmlFor="hire_date" hint="when you joined">
+          <input
+            id="hire_date"
+            name="hire_date"
+            type="date"
+            defaultValue={profile.hire_date ?? ""}
+            className={inputClass}
+          />
+        </Field>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Phone" htmlFor="phone" hint="optional">
           <input
             id="phone"
@@ -99,17 +111,16 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             className={inputClass}
           />
         </Field>
+        <Field label="Telegram" htmlFor="telegram" hint="optional">
+          <input
+            id="telegram"
+            name="telegram"
+            defaultValue={profile.telegram ?? ""}
+            placeholder="@username"
+            className={inputClass}
+          />
+        </Field>
       </div>
-
-      <Field label="Telegram" htmlFor="telegram" hint="optional">
-        <input
-          id="telegram"
-          name="telegram"
-          defaultValue={profile.telegram ?? ""}
-          placeholder="@username"
-          className={inputClass}
-        />
-      </Field>
 
       <div className="flex items-center gap-3 pt-1">
         <Button type="submit" disabled={pending}>
