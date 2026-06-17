@@ -122,6 +122,17 @@ input[list]::-webkit-calendar-picker-indicator {
   display: none !important;
 }
 
+/* Native date input: the calendar button is dark by default and vanishes on
+ * the dark theme — lighten it and make it clearly clickable. */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.65);
+  opacity: 0.8;
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 /* Themed, subtle scrollbars (matches the dark surfaces). */
 * {
   scrollbar-width: thin;
