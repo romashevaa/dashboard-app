@@ -1,7 +1,12 @@
-import { Mail, Phone } from "lucide-react";
+"use client";
 
+import { useState } from "react";
+import { Check, Copy, Gift } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import type { Profile } from "@/lib/db/types";
+import { memberSocials } from "./social-icons";
 
 export type Member = Pick<
   Profile,
@@ -11,14 +16,17 @@ export type Member = Pick<
   | "avatar_url"
   | "role"
   | "position"
+  | "birthdate"
   | "phone"
   | "telegram"
-  | "hire_date"
+  | "linkedin"
+  | "dribbble"
+  | "behance"
 >;
 
-const joinedFormat = new Intl.DateTimeFormat("en", {
-  month: "short",
-  year: "numeric",
+const birthdayFormat = new Intl.DateTimeFormat("en", {
+  month: "long",
+  day: "numeric",
 });
 
 function displayName(m: Member): string {
@@ -26,70 +34,103 @@ function displayName(m: Member): string {
   return base.charAt(0).toUpperCase() + base.slice(1);
 }
 
-function TelegramIcon({ className }: { className?: string }) {
+/** A copyable contact value (blue link + copy button), matching the design. */
+function ContactField({ href, value }: { href: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M21.94 4.66a1.3 1.3 0 0 0-1.32-.2L3.36 11.1c-.86.34-.85 1.57.02 1.9l4.2 1.56 1.62 5.05a1 1 0 0 0 1.6.46l2.4-2.05 4.2 3.08c.64.47 1.55.13 1.72-.65l3.06-14.2a1.3 1.3 0 0 0-.24-1.09ZM9.7 14.2l8.1-5.36-6.6 6.07a1 1 0 0 0-.31.6l-.27 2-.92-3.3Z" />
-    </svg>
+    <div className="flex h-10 min-w-0 items-center gap-2 rounded-md border border-white/[0.06] bg-white/[0.02] px-3">
+      <a
+        href={href}
+        className="min-w-0 flex-1 truncate text-sm text-brand-light outline-none hover:underline focus-visible:underline"
+      >
+        {value}
+      </a>
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={`Copy ${value}`}
+        title={copied ? "Copied" : "Copy"}
+        className="shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+      >
+        {copied ? (
+          <Check className="size-4 text-brand-light" aria-hidden />
+        ) : (
+          <Copy className="size-4" aria-hidden />
+        )}
+      </button>
+    </div>
   );
 }
 
-const contactLink =
-  "inline-flex max-w-full items-center gap-2 rounded text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60";
-
-/**
- * One person in the member directory: avatar, name, role/position, and tappable
- * contacts (email, phone, Telegram — Telegram opens a chat at t.me/<handle>).
- */
 export function MemberCard({ member }: { member: Member }) {
   const name = displayName(member);
-  const tgHandle = member.telegram?.replace(/^@/, "").trim();
+  const socials = memberSocials(member);
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-white/[0.06] bg-background p-5">
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-4">
         <UserAvatar
           name={name}
           src={member.avatar_url}
-          className="size-12 text-base"
+          className="size-14 rounded-full text-lg"
         />
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-foreground">{name}</p>
-          <p className="truncate text-sm capitalize text-muted-foreground">
-            {member.position || member.role}
-          </p>
+
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-foreground">{name}</p>
+            <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {member.position || member.role}
+            </p>
+            {member.birthdate ? (
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Gift className="size-3.5 text-accent-yellow" aria-hidden />
+                {birthdayFormat.format(new Date(member.birthdate))}
+              </p>
+            ) : null}
+          </div>
+
+          {socials.length > 0 ? (
+            <div className="flex shrink-0 items-center gap-1">
+              {socials.map(({ key, label, url, Icon }) => (
+                <a
+                  key={key}
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={label}
+                  title={label}
+                  className={cn(
+                    "grid size-7 place-items-center rounded-md bg-white/[0.04] text-muted-foreground outline-none transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+                  )}
+                >
+                  <Icon className="size-4" />
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 text-sm">
-        <a href={`mailto:${member.email}`} className={contactLink}>
-          <Mail className="size-4 shrink-0" aria-hidden />
-          <span className="truncate">{member.email}</span>
-        </a>
+      <div className="grid gap-2 sm:grid-cols-2">
         {member.phone ? (
-          <a href={`tel:${member.phone.replace(/\s+/g, "")}`} className={contactLink}>
-            <Phone className="size-4 shrink-0" aria-hidden />
-            <span className="truncate">{member.phone}</span>
-          </a>
+          <ContactField
+            href={`tel:${member.phone.replace(/\s+/g, "")}`}
+            value={member.phone}
+          />
         ) : null}
-        {tgHandle ? (
-          <a
-            href={`https://t.me/${tgHandle}`}
-            target="_blank"
-            rel="noreferrer"
-            className={contactLink}
-          >
-            <TelegramIcon className="size-4 shrink-0" />
-            <span className="truncate">@{tgHandle}</span>
-          </a>
-        ) : null}
+        <ContactField href={`mailto:${member.email}`} value={member.email} />
       </div>
-
-      {member.hire_date ? (
-        <p className="border-t border-white/[0.06] pt-3 text-xs text-muted-foreground">
-          Joined {joinedFormat.format(new Date(member.hire_date))}
-        </p>
-      ) : null}
     </div>
   );
 }

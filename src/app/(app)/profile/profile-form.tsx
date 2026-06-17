@@ -122,6 +122,37 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         </Field>
       </div>
 
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="LinkedIn" htmlFor="linkedin" hint="optional">
+          <input
+            id="linkedin"
+            name="linkedin"
+            defaultValue={profile.linkedin ?? ""}
+            placeholder="username or profile URL"
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Dribbble" htmlFor="dribbble" hint="optional">
+          <input
+            id="dribbble"
+            name="dribbble"
+            defaultValue={profile.dribbble ?? ""}
+            placeholder="username"
+            className={inputClass}
+          />
+        </Field>
+      </div>
+
+      <Field label="Behance" htmlFor="behance" hint="optional">
+        <input
+          id="behance"
+          name="behance"
+          defaultValue={profile.behance ?? ""}
+          placeholder="username"
+          className={inputClass}
+        />
+      </Field>
+
       <div className="flex items-center gap-3 pt-1">
         <Button type="submit" disabled={pending}>
           {pending ? "Saving…" : "Save profile"}

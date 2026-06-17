@@ -34,6 +34,9 @@ export async function updateMyProfile(
   const hireDate = clean(formData.get("hire_date"));
   const phone = clean(formData.get("phone"));
   const telegram = clean(formData.get("telegram"));
+  const linkedin = clean(formData.get("linkedin"));
+  const dribbble = clean(formData.get("dribbble"));
+  const behance = clean(formData.get("behance"));
 
   if (!firstName || !lastName) {
     return { error: "First and last name are required." };
@@ -52,6 +55,9 @@ export async function updateMyProfile(
       hire_date: hireDate,
       phone,
       telegram,
+      linkedin,
+      dribbble,
+      behance,
       full_name: fullName,
       // Saving counts as having seen the welcome.
       welcomed_at: profile.welcomed_at ?? new Date().toISOString(),

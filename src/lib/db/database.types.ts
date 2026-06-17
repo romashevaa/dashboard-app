@@ -147,6 +147,9 @@ export type Database = {
           hire_date: string | null;
           phone: string | null;
           telegram: string | null;
+          linkedin: string | null;
+          dribbble: string | null;
+          behance: string | null;
           welcomed_at: string | null;
           created_at: string;
           updated_at: string;
@@ -164,6 +167,9 @@ export type Database = {
           hire_date?: string | null;
           phone?: string | null;
           telegram?: string | null;
+          linkedin?: string | null;
+          dribbble?: string | null;
+          behance?: string | null;
           welcomed_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -181,6 +187,9 @@ export type Database = {
           hire_date?: string | null;
           phone?: string | null;
           telegram?: string | null;
+          linkedin?: string | null;
+          dribbble?: string | null;
+          behance?: string | null;
           welcomed_at?: string | null;
           created_at?: string;
           updated_at?: string;
