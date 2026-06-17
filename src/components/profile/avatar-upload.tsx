@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Camera, Loader2 } from "lucide-react";
 
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { createClient } from "@/lib/supabase/client";
@@ -72,7 +73,22 @@ export function AvatarUpload({
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <UserAvatar name={name} src={src} className="size-24 text-2xl" />
+      <div className="relative">
+        <UserAvatar name={name} src={src} className="size-24 text-2xl" />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={pending}
+          aria-label="Change photo"
+          className="absolute -bottom-1 -right-1 grid size-8 place-items-center rounded-full border-2 border-surface bg-primary text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring/60 disabled:opacity-60"
+        >
+          {pending ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+          ) : (
+            <Camera className="size-4" aria-hidden />
+          )}
+        </button>
+      </div>
 
       <div className="flex items-center gap-3 text-sm">
         <button

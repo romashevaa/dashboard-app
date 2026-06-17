@@ -1,13 +1,10 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-
 import { EmojiIcon } from "@/components/ui/emoji-icon";
 
 /**
  * Body for feature sections that are scaffolded but not yet built. The section
- * title is also rendered in the header (PageTitle); here we show a polished,
- * intentional empty state — the feature's emoji, a one-line description, a
- * "coming soon" pill — plus a back link to the dashboard.
+ * title (and a back-to-dashboard arrow) is rendered in the header (PageTitle);
+ * here we show a polished, intentional empty state — the feature's emoji, a
+ * one-line description, and a "coming soon" pill.
  */
 export function SectionPlaceholder({
   icon,
@@ -21,14 +18,6 @@ export function SectionPlaceholder({
 }) {
   return (
     <section className="flex flex-col gap-5">
-      <Link
-        href="/"
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Back to dashboard
-      </Link>
-
       <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center">
         {icon ? (
           <span className="grid size-14 place-items-center rounded-full bg-white/[0.06]">
