@@ -87,12 +87,11 @@ export default async function AdminPage() {
                   currentRole={profile.role}
                   isSelf={isSelf}
                 />
-                {isSelf ? (
-                  // Keep the role selects aligned across rows.
-                  <span className="size-8 shrink-0" aria-hidden />
-                ) : (
-                  <RemoveUserButton userId={profile.id} name={name} />
-                )}
+                <RemoveUserButton
+                  userId={profile.id}
+                  name={name}
+                  isSelf={isSelf}
+                />
               </div>
             </div>
           );

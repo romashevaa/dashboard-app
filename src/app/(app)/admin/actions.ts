@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { requireAdmin } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
@@ -49,17 +50,14 @@ export async function updateUserRole(
 
 /**
  * Permanently removes a user — deletes the auth.users row, which cascades to
- * their profile (and credentials they own stay; those belong to services, not
- * users). Requires the service-role key, since deleting an auth user is beyond
- * what RLS/anon can do. Admin-gated; you can't remove yourself.
+ * their profile. Requires the service-role key, since deleting an auth user is
+ * beyond what RLS/anon can do. Admin-gated. Removing yourself signs you out.
  */
 export async function removeUser(userId: string): Promise<RemoveUserState> {
   const admin = await requireAdmin();
-
   if (!userId) return { error: "Invalid request." };
-  if (userId === admin.id) {
-    return { error: "You can't remove your own account." };
-  }
+
+  const isSelf = userId === admin.id;
 
   // Capture identity for the audit log before the row is gone.
   const supabase = await createClient();
@@ -79,19 +77,31 @@ export async function removeUser(userId: string): Promise<RemoveUserState> {
     };
   }
 
+  // Record the audit event BEFORE deletion: record_audit_event sets actor =
+  // auth.uid(), and for self-removal that row vanishes with the delete (the
+  // actor_id FK would then fail). Identifiers only — no secrets.
+  await supabase.rpc("record_audit_event", {
+    p_action: "delete",
+    p_entity_type: "user",
+    p_entity_id: userId,
+    p_metadata: {
+      email: target?.email ?? null,
+      role: target?.role ?? null,
+      self: isSelf,
+    },
+  });
+
   const { error } = await adminClient.auth.admin.deleteUser(userId);
   if (error) {
     console.error("[admin] deleteUser failed:", error.message);
     return { error: "Couldn't remove the user. Try again." };
   }
 
-  // Audit with identifiers only (actor = current admin, set by the function).
-  await supabase.rpc("record_audit_event", {
-    p_action: "delete",
-    p_entity_type: "user",
-    p_entity_id: userId,
-    p_metadata: { email: target?.email ?? null, role: target?.role ?? null },
-  });
+  if (isSelf) {
+    // Your account no longer exists — clear the session and go to login.
+    await supabase.auth.signOut();
+    redirect("/login");
+  }
 
   revalidatePath("/admin");
   return { ok: true };
