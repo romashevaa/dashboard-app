@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/db/types";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { RoleForm } from "./role-form";
 import { RemoveUserButton } from "./remove-user-button";
 
@@ -14,11 +15,6 @@ function displayName(profile: Profile): string {
   const base =
     profile.full_name?.trim() || profile.email.split("@")[0] || profile.email;
   return base.charAt(0).toUpperCase() + base.slice(1);
-}
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).slice(0, 2);
-  return parts.map((p) => p[0]?.toUpperCase() ?? "").join("") || "?";
 }
 
 const joinedFormat = new Intl.DateTimeFormat("en", {
@@ -61,12 +57,11 @@ export default async function AdminPage() {
               className="flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:gap-4 sm:py-3"
             >
               <div className="flex min-w-0 flex-1 items-center gap-3">
-                <span
-                  aria-hidden
-                  className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-semibold text-white"
-                >
-                  {initials(name)}
-                </span>
+                <UserAvatar
+                  name={name}
+                  src={profile.avatar_url}
+                  className="size-9 text-sm"
+                />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-foreground">
                     {name}
