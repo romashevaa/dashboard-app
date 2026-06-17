@@ -5,8 +5,10 @@ import { redirect } from "next/navigation";
 
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
+import { lookupSlackUserByEmail } from "@/lib/slack/client";
 
 export type ProfileFormState = { ok?: boolean; error?: string };
+export type ImportState = { ok?: boolean; error?: string };
 
 function clean(value: FormDataEntryValue | null): string | null {
   const trimmed = String(value ?? "").trim();
@@ -79,6 +81,64 @@ export async function dismissWelcome(): Promise<void> {
     .eq("id", profile.id);
 
   revalidatePath("/", "layout");
+}
+
+/**
+ * Pre-fills the user's profile from their Slack account (matched by email).
+ * Maps name, title→position, phone and avatar; only overwrites a field when
+ * Slack actually has a value, so it won't wipe details the user already set.
+ */
+export async function importFromSlack(
+  _prev: ImportState,
+  _formData: FormData
+): Promise<ImportState> {
+  const profile = await getCurrentProfile();
+  if (!profile) redirect("/login");
+
+  const result = await lookupSlackUserByEmail(profile.email);
+  if (!result.ok) {
+    const message =
+      result.error === "users_not_found"
+        ? "No Slack account found for your email."
+        : result.error === "not_configured"
+          ? "Slack import isn't configured yet."
+          : "Couldn't reach Slack. Please try again.";
+    return { error: message };
+  }
+
+  const sp = result.profile;
+  const realParts = (sp.real_name ?? "").trim().split(/\s+/).filter(Boolean);
+  const firstName =
+    sp.first_name?.trim() || realParts[0] || profile.first_name;
+  const lastName =
+    sp.last_name?.trim() || realParts.slice(1).join(" ") || profile.last_name;
+  const position = sp.title?.trim() || profile.position;
+  const phone = sp.phone?.trim() || profile.phone;
+  const avatarUrl = sp.image_512 || sp.image_192 || profile.avatar_url;
+  const fullName =
+    [firstName, lastName].filter(Boolean).join(" ") || profile.full_name;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      first_name: firstName,
+      last_name: lastName,
+      position,
+      phone,
+      avatar_url: avatarUrl,
+      full_name: fullName,
+      welcomed_at: profile.welcomed_at ?? new Date().toISOString(),
+    })
+    .eq("id", profile.id);
+
+  if (error) {
+    console.error("[profile] slack import save failed:", error.message);
+    return { error: "Couldn't save the imported details." };
+  }
+
+  revalidatePath("/", "layout");
+  return { ok: true };
 }
 
 /**

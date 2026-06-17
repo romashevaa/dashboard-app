@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { isProfileComplete, type Profile } from "@/lib/db/types";
+import { isSlackConfigured } from "@/lib/slack/client";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
+import { ImportFromSlack } from "@/components/profile/import-from-slack";
 import { ProfileForm } from "./profile-form";
 
 export const metadata: Metadata = {
@@ -25,6 +27,7 @@ export default async function ProfilePage() {
 
   const complete = isProfileComplete(profile);
   const name = displayName(profile);
+  const slackEnabled = isSlackConfigured();
 
   return (
     <section className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
@@ -72,6 +75,8 @@ export default async function ProfilePage() {
               : "Tell the team a bit about yourself — this shows up in the member directory."}
           </p>
         </div>
+
+        {slackEnabled ? <ImportFromSlack /> : null}
 
         <ProfileForm profile={profile} />
       </div>
