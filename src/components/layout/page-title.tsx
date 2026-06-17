@@ -25,11 +25,18 @@ export function PageTitle({ name }: { name: string }) {
     );
   }
 
-  const item = [...NAV_ITEMS, ADMIN_NAV_ITEM].find(
-    (i) =>
-      i.href !== "/" &&
-      (pathname === i.href || pathname.startsWith(`${i.href}/`))
-  );
+  // Pages reached outside the sidebar nav (e.g. the account avatar).
+  const EXTRA: Record<string, { label: string; icon: string }> = {
+    "/profile": { label: "My profile", icon: "technologist" },
+  };
+
+  const item =
+    EXTRA[pathname] ??
+    [...NAV_ITEMS, ADMIN_NAV_ITEM].find(
+      (i) =>
+        i.href !== "/" &&
+        (pathname === i.href || pathname.startsWith(`${i.href}/`))
+    );
 
   return (
     <p className={titleClass}>

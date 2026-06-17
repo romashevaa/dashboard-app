@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LogOut } from "lucide-react";
 
@@ -6,8 +7,9 @@ import { PageTitle } from "@/components/layout/page-title";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { ClearPendingSignIn } from "@/components/auth/clear-pending-sign-in";
+import { WelcomeModal } from "@/components/profile/welcome-modal";
 import { getViewerContext } from "@/lib/auth/profile";
-import type { Profile } from "@/lib/db/types";
+import { isProfileComplete, type Profile } from "@/lib/db/types";
 
 function displayName(profile: Profile): string {
   const base =
@@ -40,10 +42,15 @@ export default async function AppLayout({
   }
 
   const name = displayName(profile);
+  const profileComplete = isProfileComplete(profile);
 
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
       <ClearPendingSignIn />
+      <WelcomeModal
+        open={!profile.welcomed_at}
+        firstName={profile.first_name?.trim() || name}
+      />
       <Sidebar
         isAdmin={isAdmin}
         isRealAdmin={isRealAdmin}
@@ -61,12 +68,23 @@ export default async function AppLayout({
             />
             <PageTitle name={name} />
             <div className="flex shrink-0 items-center gap-2">
-              <span
-                aria-hidden
-                className="grid size-9 place-items-center rounded-md bg-white/10 text-sm font-semibold text-white"
+              <Link
+                href="/profile"
+                aria-label={
+                  profileComplete
+                    ? "Your profile"
+                    : "Your profile — complete your details"
+                }
+                className="relative grid size-9 place-items-center rounded-md bg-white/10 text-sm font-semibold text-white outline-none transition-colors hover:bg-white/[0.16] focus-visible:ring-2 focus-visible:ring-ring/60"
               >
                 {initials(name)}
-              </span>
+                {!profileComplete ? (
+                  <span
+                    aria-hidden
+                    className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-destructive ring-2 ring-surface"
+                  />
+                ) : null}
+              </Link>
               <form action="/auth/signout" method="post">
                 <Button
                   type="submit"
