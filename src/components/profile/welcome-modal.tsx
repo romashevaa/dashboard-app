@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -21,22 +21,19 @@ export function WelcomeModal({
   firstName: string;
 }) {
   const [open, setOpen] = useState(initialOpen);
-  const [, startTransition] = useTransition();
   const router = useRouter();
 
   const close = () => {
     setOpen(false);
-    startTransition(() => {
-      void dismissWelcome();
-    });
+    void dismissWelcome();
   };
 
-  const goToProfile = () => {
+  // Mark the welcome seen first, then navigate — so the profile page doesn't
+  // briefly re-open this modal before welcomed_at is committed.
+  const goToProfile = async () => {
     setOpen(false);
-    startTransition(async () => {
-      await dismissWelcome();
-      router.push("/profile");
-    });
+    await dismissWelcome();
+    router.push("/profile");
   };
 
   return (

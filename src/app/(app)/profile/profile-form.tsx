@@ -45,7 +45,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   );
 
   return (
-    <form action={formAction} className="flex max-w-xl flex-col gap-5">
+    <form action={formAction} className="flex w-full flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="First name" htmlFor="first_name">
           <input
