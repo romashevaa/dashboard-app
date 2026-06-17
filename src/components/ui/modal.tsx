@@ -19,7 +19,8 @@ export function Modal({
 }: {
   open: boolean;
   onClose: () => void;
-  title: string;
+  /** Header title. Omit for a title-less hero modal (bare close button). */
+  title?: string;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -95,26 +96,38 @@ export function Modal({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={titleId}
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={title ? undefined : "Dialog"}
         tabIndex={-1}
         className={cn(
           "relative z-10 max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl border border-white/10 bg-surface p-6 shadow-2xl outline-none",
           className
         )}
       >
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 id={titleId} className="text-lg font-semibold tracking-tight">
-            {title}
-          </h2>
+        {title ? (
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <h2 id={titleId} className="text-lg font-semibold tracking-tight">
+              {title}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+            >
+              <X className="size-5" aria-hidden />
+            </button>
+          </div>
+        ) : (
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+            className="absolute right-3 top-3 z-10 grid size-8 place-items-center rounded-md text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
           >
             <X className="size-5" aria-hidden />
           </button>
-        </div>
+        )}
         {children}
       </div>
     </div>

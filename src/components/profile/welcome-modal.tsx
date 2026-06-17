@@ -37,25 +37,28 @@ export function WelcomeModal({
   };
 
   return (
-    <Modal open={open} onClose={close} title="Welcome to the team">
-      <div className="flex flex-col gap-5">
-        <div className="flex items-start gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/[0.08]">
-            <EmojiIcon name="wave" size={22} />
-          </span>
+    <Modal open={open} onClose={close} className="max-w-sm">
+      <div className="flex flex-col items-center gap-5 pt-2 text-center">
+        <span className="grid size-20 place-items-center rounded-full bg-primary/15 ring-1 ring-inset ring-primary/20">
+          <EmojiIcon name="wave" size={40} />
+        </span>
+
+        <div className="space-y-1.5">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Welcome aboard{firstName ? `, ${firstName}` : ""}!
+          </h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Hi {firstName}, glad you&apos;re here! Take a minute to tell the team
-            a bit about yourself — your name, role, and how to reach you. It
-            shows up in the member directory.
+            You&apos;re now part of the Webfolks team hub. Add a few details —
+            your name, role, and photo — so teammates can find and reach you.
           </p>
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex w-full flex-col gap-2 pt-1">
+          <Button type="button" size="xl" onClick={goToProfile}>
+            Set up my profile
+          </Button>
           <Button type="button" variant="ghost" onClick={close}>
             Maybe later
-          </Button>
-          <Button type="button" onClick={goToProfile}>
-            Fill in my profile
           </Button>
         </div>
       </div>
