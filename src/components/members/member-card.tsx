@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Mail, Phone } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { EmojiIcon } from "@/components/ui/emoji-icon";
@@ -35,8 +35,16 @@ function displayName(m: Member): string {
   return base.charAt(0).toUpperCase() + base.slice(1);
 }
 
-/** A copyable contact value (blue link + copy button), matching the design. */
-function ContactField({ href, value }: { href: string; value: string }) {
+/** A contact: icon + clickable value, with copy-on-hover (always shown on touch). */
+function ContactRow({
+  icon: Icon,
+  href,
+  value,
+}: {
+  icon: typeof Phone;
+  href: string;
+  value: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -50,10 +58,11 @@ function ContactField({ href, value }: { href: string; value: string }) {
   }
 
   return (
-    <div className="flex h-10 min-w-0 items-center gap-2 rounded-md border border-white/[0.06] bg-white/[0.02] px-3">
+    <div className="group/c flex items-center gap-2.5 rounded-lg bg-white/[0.03] px-3 py-2.5">
+      <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
       <a
         href={href}
-        className="min-w-0 flex-1 truncate text-sm text-brand-light outline-none hover:underline focus-visible:underline"
+        className="min-w-0 flex-1 truncate text-sm text-foreground outline-none transition-colors hover:text-brand-light focus-visible:text-brand-light"
       >
         {value}
       </a>
@@ -62,7 +71,10 @@ function ContactField({ href, value }: { href: string; value: string }) {
         onClick={copy}
         aria-label={`Copy ${value}`}
         title={copied ? "Copied" : "Copy"}
-        className="shrink-0 rounded text-muted-foreground outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
+        className={cn(
+          "shrink-0 rounded text-muted-foreground outline-none transition-all hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/60",
+          "opacity-100 pointer-fine:opacity-0 pointer-fine:group-hover/c:opacity-100"
+        )}
       >
         {copied ? (
           <Check className="size-4 text-brand-light" aria-hidden />
@@ -79,22 +91,22 @@ export function MemberCard({ member }: { member: Member }) {
   const socials = memberSocials(member);
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-white/[0.06] bg-background p-5">
+    <div className="flex flex-col gap-5 rounded-xl border border-white/[0.06] bg-background p-5 transition-colors hover:border-white/[0.12]">
       <div className="flex items-start gap-4">
         <UserAvatar
           name={name}
           src={member.avatar_url}
-          className="size-14 rounded-full text-lg"
+          className="size-14 rounded-full text-lg ring-1 ring-white/10"
         />
 
-        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate font-semibold text-foreground">{name}</p>
             <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {member.position || member.role}
             </p>
             {member.birthdate ? (
-              <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <EmojiIcon name="gift" size={14} />
                 {birthdayFormat.format(new Date(member.birthdate))}
               </p>
@@ -102,7 +114,7 @@ export function MemberCard({ member }: { member: Member }) {
           </div>
 
           {socials.length > 0 ? (
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1.5">
               {socials.map(({ key, label, url, Icon }) => (
                 <a
                   key={key}
@@ -111,9 +123,7 @@ export function MemberCard({ member }: { member: Member }) {
                   rel="noreferrer"
                   aria-label={label}
                   title={label}
-                  className={cn(
-                    "grid size-7 place-items-center rounded-md bg-white/[0.04] text-muted-foreground outline-none transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
-                  )}
+                  className="grid size-8 place-items-center rounded-md bg-white/[0.05] text-muted-foreground outline-none transition-colors hover:bg-white/[0.1] hover:text-white focus-visible:ring-2 focus-visible:ring-ring/60"
                 >
                   <Icon className="size-4" />
                 </a>
@@ -123,14 +133,15 @@ export function MemberCard({ member }: { member: Member }) {
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="flex flex-col gap-1.5">
         {member.phone ? (
-          <ContactField
+          <ContactRow
+            icon={Phone}
             href={`tel:${member.phone.replace(/\s+/g, "")}`}
             value={member.phone}
           />
         ) : null}
-        <ContactField href={`mailto:${member.email}`} value={member.email} />
+        <ContactRow icon={Mail} href={`mailto:${member.email}`} value={member.email} />
       </div>
     </div>
   );
