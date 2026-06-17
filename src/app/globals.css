@@ -133,6 +133,20 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
 
+/* Browser autofill forces a light background + dark text, which breaks the
+ * dark theme. Paint over it with our input colors (the inset box-shadow trick),
+ * and freeze the background transition so it can't flash. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--foreground);
+  -webkit-box-shadow: 0 0 0 1000px var(--background) inset;
+  box-shadow: 0 0 0 1000px var(--background) inset;
+  caret-color: var(--foreground);
+  transition: background-color 99999s ease-in-out 0s;
+}
+
 /* Themed, subtle scrollbars (matches the dark surfaces). */
 * {
   scrollbar-width: thin;
