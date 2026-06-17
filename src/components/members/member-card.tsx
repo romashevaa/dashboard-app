@@ -35,7 +35,7 @@ function displayName(m: Member): string {
   return base.charAt(0).toUpperCase() + base.slice(1);
 }
 
-/** A contact: icon + clickable value, with copy-on-hover (always shown on touch). */
+/** A contact line: icon + clickable value, with a subtle copy-on-hover. */
 function ContactRow({
   icon: Icon,
   href,
@@ -58,11 +58,11 @@ function ContactRow({
   }
 
   return (
-    <div className="group/c flex items-center gap-2.5 rounded-lg bg-white/[0.03] px-3 py-2.5">
+    <div className="group/c flex items-center gap-2.5">
       <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
       <a
         href={href}
-        className="min-w-0 flex-1 truncate text-sm text-foreground outline-none transition-colors hover:text-brand-light focus-visible:text-brand-light"
+        className="min-w-0 flex-1 truncate text-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
       >
         {value}
       </a>
@@ -77,9 +77,9 @@ function ContactRow({
         )}
       >
         {copied ? (
-          <Check className="size-4 text-brand-light" aria-hidden />
+          <Check className="size-3.5 text-brand-light" aria-hidden />
         ) : (
-          <Copy className="size-4" aria-hidden />
+          <Copy className="size-3.5" aria-hidden />
         )}
       </button>
     </div>
@@ -133,7 +133,7 @@ export function MemberCard({ member }: { member: Member }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2.5 border-t border-white/[0.06] pt-4">
         {member.phone ? (
           <ContactRow
             icon={Phone}
