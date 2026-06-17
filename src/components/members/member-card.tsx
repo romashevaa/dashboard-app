@@ -96,7 +96,7 @@ export function MemberCard({ member }: { member: Member }) {
         <UserAvatar
           name={name}
           src={member.avatar_url}
-          className="size-14 rounded-full text-lg ring-1 ring-white/10"
+          className="size-16 rounded-full text-xl ring-1 ring-white/10"
         />
 
         <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
