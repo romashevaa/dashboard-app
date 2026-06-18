@@ -2,11 +2,12 @@
 
 import type { ComponentType } from "react";
 import Link from "next/link";
+import { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { Globe } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { ADMIN_NAV_ITEM, NAV_ITEMS } from "@/lib/nav";
+import { ADMIN_NAV_ITEM, NAV_ITEMS, type NavItem } from "@/lib/nav";
 import { EmojiIcon } from "@/components/ui/emoji-icon";
 import { AdminPreviewToggle } from "./admin-preview-toggle";
 import { WebfolksLogo } from "./webfolks-logo";
@@ -14,6 +15,29 @@ import { WebfolksLogo } from "./webfolks-logo";
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
+ * The clickable content of a nav item. Lives *inside* <Link> so it can read
+ * `useLinkStatus()` — that gives the row an instant highlight the moment it's
+ * clicked, before the next route finishes rendering, so navigation feels
+ * immediately responsive instead of waiting on the server.
+ */
+function NavItemContent({ item, active }: { item: NavItem; active: boolean }) {
+  const { pending } = useLinkStatus();
+  const highlighted = active || pending;
+
+  return (
+    <span
+      className={cn(
+        "flex items-center gap-3 rounded-lg p-2.5 text-base font-medium text-white transition-colors",
+        highlighted ? "bg-white/10" : "text-white/90 hover:bg-white/5"
+      )}
+    >
+      <EmojiIcon name={item.icon} size={22} />
+      {item.label}
+    </span>
+  );
 }
 
 // lucide-react dropped brand glyphs in v1, so the social marks are inlined.
@@ -91,13 +115,9 @@ export function Sidebar({
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg p-2.5 text-base font-medium text-white transition-colors",
-                  active ? "bg-white/10" : "text-white/90 hover:bg-white/5"
-                )}
+                className="rounded-lg"
               >
-                <EmojiIcon name={item.icon} size={22} />
-                {item.label}
+                <NavItemContent item={item} active={active} />
               </Link>
             );
           })}
