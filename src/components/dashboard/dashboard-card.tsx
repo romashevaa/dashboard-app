@@ -29,15 +29,14 @@ export function DashboardCard({
   className?: string;
   children?: React.ReactNode;
 }) {
-  const baseClass =
-    "flex flex-col gap-5 rounded-xl border border-white/10 bg-white/[0.03] p-5";
+  const baseClass = "flex flex-col gap-5 rounded-xl bg-background p-5";
 
   if (href) {
     return (
       <Link
         href={href}
         className={cn(
-          "group outline-none transition-colors hover:border-white/25 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/60",
+          "group outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/60",
           baseClass,
           className
         )}

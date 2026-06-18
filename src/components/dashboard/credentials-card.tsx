@@ -16,7 +16,7 @@ export function CredentialsCard({ className }: { className?: string }) {
       href="/credentials"
       aria-label="Credentials — all shared accounts in one place"
       className={cn(
-        "group relative flex flex-col gap-5 overflow-hidden rounded-xl border border-white/[0.16] bg-gradient-to-b from-[#17238c] to-[#111a68] py-5 outline-none transition-colors hover:from-[#2030c1] hover:to-[#152184] focus-visible:ring-2 focus-visible:ring-ring/60 lg:pb-0",
+        "group relative flex flex-col gap-5 overflow-hidden rounded-xl bg-gradient-to-b from-[#17238c] to-[#111a68] py-5 outline-none transition-colors hover:from-[#2030c1] hover:to-[#152184] focus-visible:ring-2 focus-visible:ring-ring/60 lg:pb-0",
         className
       )}
     >
