@@ -1,11 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import type { Profile } from "@/lib/db/types";
 import { updateMyProfile, type ProfileFormState } from "./actions";
+import { useUnsavedChanges } from "@/components/profile/use-unsaved-changes";
 
 const initialState: ProfileFormState = {};
 
@@ -44,8 +46,23 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     initialState
   );
 
+  // Track whether the form has unsaved edits; reset once a save succeeds.
+  const [dirty, setDirty] = useState(false);
+  const [prevOk, setPrevOk] = useState(state.ok);
+  if (state.ok !== prevOk) {
+    setPrevOk(state.ok);
+    if (state.ok) setDirty(false);
+  }
+
+  const { pendingHref, confirmLeave, cancelLeave } = useUnsavedChanges(dirty);
+
   return (
-    <form action={formAction} className="flex w-full flex-col gap-5">
+    <>
+    <form
+      action={formAction}
+      onInput={() => setDirty(true)}
+      className="flex w-full flex-col gap-5"
+    >
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="First name" htmlFor="first_name">
           <input
@@ -169,5 +186,30 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         ) : null}
       </div>
     </form>
+
+    {pendingHref ? (
+      <Modal
+        open
+        onClose={cancelLeave}
+        title="Leave without saving?"
+        className="max-w-sm"
+      >
+        <div className="flex flex-col gap-5">
+          <p className="text-sm text-muted-foreground">
+            You have unsaved changes. If you leave this page now, they&apos;ll be
+            lost.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={cancelLeave}>
+              Keep editing
+            </Button>
+            <Button type="button" variant="destructive" onClick={confirmLeave}>
+              Leave
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    ) : null}
+    </>
   );
 }
