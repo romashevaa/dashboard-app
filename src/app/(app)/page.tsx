@@ -19,18 +19,21 @@ export default function OverviewPage() {
         title="Time off"
         subtitle="Days off, sick leave & vacation"
         icon="palmtree"
+        href="/events"
         className="lg:col-span-2 lg:row-span-[4]"
       />
       <DashboardCard
         title="Agency events"
         subtitle="Upcoming holidays & events"
         icon="calendar"
+        href="/events"
         className="lg:col-start-3 lg:row-start-1 lg:row-span-[6]"
       />
       <DashboardCard
         title="Agency onboarding"
         subtitle="Salary, time tracking & more"
         icon="page"
+        href="/links"
         className="lg:col-start-1 lg:row-start-[5] lg:row-span-[6]"
       />
 
@@ -43,6 +46,7 @@ export default function OverviewPage() {
         title="Resources"
         subtitle="Tools & learning library"
         icon="unicorn"
+        href="/resources"
         className="lg:col-start-3 lg:row-start-[7] lg:row-span-[4]"
       />
     </div>
