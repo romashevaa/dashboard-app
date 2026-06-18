@@ -47,10 +47,13 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   );
 
   // Track whether the form has unsaved edits; reset once a save succeeds.
+  // Compare the action state by identity (useActionState returns a fresh
+  // object per submit) so *every* successful save clears the flag — comparing
+  // `state.ok` alone misses consecutive saves where `ok` stays true.
   const [dirty, setDirty] = useState(false);
-  const [prevOk, setPrevOk] = useState(state.ok);
-  if (state.ok !== prevOk) {
-    setPrevOk(state.ok);
+  const [handledState, setHandledState] = useState(state);
+  if (state !== handledState) {
+    setHandledState(state);
     if (state.ok) setDirty(false);
   }
 
