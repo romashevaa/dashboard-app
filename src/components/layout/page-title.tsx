@@ -27,9 +27,12 @@ export function PageTitle({ name }: { name: string }) {
     );
   }
 
-  // Pages reached outside the sidebar nav (e.g. the account avatar).
+  // Pages reached outside the sidebar nav (e.g. the account avatar, or the
+  // dashboard blocks that link to not-yet-promoted sections).
   const EXTRA: Record<string, { label: string; icon: string }> = {
     "/profile": { label: "My profile", icon: "technologist" },
+    "/events": { label: "Events", icon: "calendar" },
+    "/links": { label: "Links", icon: "link" },
   };
 
   const item =
