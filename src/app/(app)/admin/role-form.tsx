@@ -31,7 +31,7 @@ export function RoleForm({
   return (
     <form
       action={formAction}
-      className="flex w-full shrink-0 items-center gap-2 sm:w-auto"
+      className="flex min-w-0 flex-1 items-center gap-2 sm:w-auto sm:flex-none"
     >
       <input type="hidden" name="userId" value={userId} />
 
