@@ -38,6 +38,9 @@ export default async function AppLayout({
   }
 
   const name = displayName(profile);
+  // The greeting reads better with just the first name; the avatar still uses
+  // the full name for two-letter initials.
+  const firstName = name.split(" ")[0];
   const profileComplete = isProfileComplete(profile);
 
   return (
@@ -62,7 +65,7 @@ export default async function AppLayout({
               isRealAdmin={isRealAdmin}
               previewingAsMember={previewingAsMember}
             />
-            <PageTitle name={name} />
+            <PageTitle name={firstName} />
             <div className="flex shrink-0 items-center gap-2">
               <Link
                 href="/profile"
