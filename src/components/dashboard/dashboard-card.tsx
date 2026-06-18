@@ -37,7 +37,7 @@ export function DashboardCard({
       <Link
         href={href}
         className={cn(
-          "group outline-none transition-colors hover:border-white/20 hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-ring/60",
+          "group outline-none transition-colors hover:border-white/25 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/60",
           baseClass,
           className
         )}
