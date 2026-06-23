@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -14,23 +15,31 @@ export const ADMIN_PREVIEW_COOKIE = "admin_preview";
 /**
  * Returns the current user's profile (role, etc.), or null if not signed in.
  * RLS guarantees a user can only read profiles it's permitted to.
+ *
+ * Wrapped in React `cache()` so multiple callers in one request (the app
+ * layout + `requireAdmin` on admin pages) share a single execution instead of
+ * each re-running the auth check and profile query.
+ *
+ * Uses `getClaims()` (local JWT verification with asymmetric signing keys — no
+ * Auth-server round-trip) rather than `getUser()` to read the user id.
  */
-export async function getCurrentProfile(): Promise<Profile | null> {
+export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: claims,
+  } = await supabase.auth.getClaims();
 
-  if (!user) return null;
+  const userId = claims?.claims?.sub;
+  if (!userId) return null;
 
   const { data } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
 
   return (data as Profile | null) ?? null;
-}
+});
 
 export type ViewerContext = {
   profile: Profile | null;

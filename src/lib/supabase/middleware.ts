@@ -51,11 +51,17 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: Do not run code between createServerClient and getUser(). A
-  // simple mistake could make it hard to debug random user logouts.
+  // IMPORTANT: Do not run code between createServerClient and the claims
+  // check. A simple mistake could make it hard to debug random user logouts.
+  //
+  // getClaims() verifies the JWT *locally* (no Auth-server round-trip) when the
+  // project uses asymmetric signing keys, and still refreshes the session
+  // before expiry — so this stays correct but drops a network hop on every
+  // navigation. RLS remains the authoritative gate (see CLAUDE.md).
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: claims,
+  } = await supabase.auth.getClaims();
+  const user = claims?.claims ?? null;
 
   const { pathname } = request.nextUrl;
 
