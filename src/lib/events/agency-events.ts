@@ -21,7 +21,9 @@ const MONTH_LABEL = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
-const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAY_FULL = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
 
 /** A holiday row, ready to render in the Holidays tab. */
 export type HolidayItem = {
@@ -32,10 +34,14 @@ export type HolidayItem = {
   day: number;
   /** 3-letter month of the effective day off. */
   month: string;
+  /** Full weekday of the day off — the headline fact, e.g. "Monday". */
+  weekday: string;
   /** True when the day off was transferred (e.g. weekend → Monday). */
   moved: boolean;
-  /** The original holiday date, e.g. "Jun 28", shown when `moved`. */
-  realLabel: string | null;
+  /** Full weekday of the original holiday date when moved, e.g. "Sunday". */
+  realWeekday: string | null;
+  /** The original holiday date when moved, e.g. "Jun 28". */
+  realDate: string | null;
 };
 
 /** A birthday, ready to render in the Birthdays tab. */
@@ -62,11 +68,16 @@ function parts(iso: string): { month: number; day: number } {
   return { month: m, day: d };
 }
 
-/** "May 31 (Sun)" — weekday computed in UTC to avoid timezone drift. */
-function dateLabel(iso: string): string {
+/** "Monday" — weekday computed in UTC to avoid timezone drift. */
+function weekdayFull(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
-  const weekday = WEEKDAY[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
-  return `${MONTH_LABEL[m - 1]} ${d} (${weekday})`;
+  return WEEKDAY_FULL[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+}
+
+/** "Jun 28" — month + day, no weekday. */
+function monthDay(iso: string): string {
+  const { month, day } = parts(iso);
+  return `${MONTH_LABEL[month - 1]} ${day}`;
 }
 
 function displayName(p: Pick<Profile, "first_name" | "last_name" | "full_name" | "email">): string {
@@ -103,8 +114,10 @@ export async function getAgencyEvents(): Promise<AgencyEvents> {
         emoji: h.emoji,
         day: eff.day,
         month: MONTH_CHIP[eff.month - 1],
+        weekday: weekdayFull(effective),
         moved,
-        realLabel: moved ? dateLabel(h.holiday_date) : null,
+        realWeekday: moved ? weekdayFull(h.holiday_date) : null,
+        realDate: moved ? monthDay(h.holiday_date) : null,
         _wrap: monthDayKey(eff.month, eff.day) >= todayKey ? 0 : 1,
         _key: monthDayKey(eff.month, eff.day),
       };

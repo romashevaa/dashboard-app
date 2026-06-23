@@ -121,11 +121,15 @@ function HolidayList({ holidays }: { holidays: HolidayItem[] }) {
           </span>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-foreground">{h.name}</p>
-            {h.moved ? (
-              <p className="truncate text-xs text-muted-foreground">
-                Holiday on {h.realLabel}
-              </p>
-            ) : null}
+            <p className="truncate text-xs">
+              <span className="font-medium text-foreground/80">{h.weekday}</span>
+              {h.moved ? (
+                <span className="text-muted-foreground">
+                  {" — moved from "}
+                  {h.realWeekday}, {h.realDate}
+                </span>
+              ) : null}
+            </p>
           </div>
         </li>
       ))}
