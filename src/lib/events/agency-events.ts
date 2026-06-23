@@ -21,6 +21,7 @@ const MONTH_LABEL = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
+const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /** A holiday row, ready to render in the Holidays tab. */
 export type HolidayItem = {
@@ -61,6 +62,13 @@ function parts(iso: string): { month: number; day: number } {
   return { month: m, day: d };
 }
 
+/** "May 31 (Sun)" — weekday computed in UTC to avoid timezone drift. */
+function dateLabel(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const weekday = WEEKDAY[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return `${MONTH_LABEL[m - 1]} ${d} (${weekday})`;
+}
+
 function displayName(p: Pick<Profile, "first_name" | "last_name" | "full_name" | "email">): string {
   const base =
     [p.first_name?.trim(), p.last_name?.trim()].filter(Boolean).join(" ") ||
@@ -89,7 +97,6 @@ export async function getAgencyEvents(): Promise<AgencyEvents> {
       const effective = h.observed_date ?? h.holiday_date;
       const eff = parts(effective);
       const moved = Boolean(h.observed_date && h.observed_date !== h.holiday_date);
-      const real = parts(h.holiday_date);
       return {
         id: h.id,
         name: h.name,
@@ -97,7 +104,7 @@ export async function getAgencyEvents(): Promise<AgencyEvents> {
         day: eff.day,
         month: MONTH_CHIP[eff.month - 1],
         moved,
-        realLabel: moved ? `${MONTH_LABEL[real.month - 1]} ${real.day}` : null,
+        realLabel: moved ? dateLabel(h.holiday_date) : null,
         _wrap: monthDayKey(eff.month, eff.day) >= todayKey ? 0 : 1,
         _key: monthDayKey(eff.month, eff.day),
       };
