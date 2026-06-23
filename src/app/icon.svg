@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="7" fill="#0E1441"/>
+  <g transform="translate(5.535 6.235) scale(0.84)">
+    <path d="M14.9502 16.375L17.4418 14L19.9334 16.375L17.4418 18.75L14.9502 16.375Z" fill="#F8CD46"/>
+    <path d="M7.47482 4.5L0 11.625L7.47482 18.75L17.4413 9.25L22.4245 14L24.9161 11.625L17.4413 4.5L7.47482 14L4.98322 11.625L9.96643 6.875L7.47482 4.5Z" fill="url(#wf-favicon)"/>
+  </g>
+  <defs>
+    <linearGradient id="wf-favicon" x1="6.12521" y1="18.75" x2="24.6613" y2="11.0145" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#438FF9"/>
+      <stop offset="1" stop-color="#2CB3FF"/>
+    </linearGradient>
+  </defs>
+</svg>
