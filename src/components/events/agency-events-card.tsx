@@ -123,7 +123,7 @@ function HolidayList({ holidays }: { holidays: HolidayItem[] }) {
             <p className="truncate text-sm font-semibold text-foreground">{h.name}</p>
             {h.moved ? (
               <p className="truncate text-xs text-muted-foreground">
-                Day off — holiday is {h.realLabel}
+                Holiday on {h.realLabel}
               </p>
             ) : null}
           </div>

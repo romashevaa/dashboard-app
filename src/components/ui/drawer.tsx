@@ -30,16 +30,31 @@ export function Drawer({
   const [render, setRender] = useState(open);
   const [visible, setVisible] = useState(false);
 
+  // Mount on open; keep mounted through the close transition.
   useEffect(() => {
     if (open) {
       setRender(true);
-      const id = requestAnimationFrame(() => setVisible(true));
-      return () => cancelAnimationFrame(id);
+      return;
     }
     setVisible(false);
     const t = setTimeout(() => setRender(false), 200);
     return () => clearTimeout(t);
   }, [open]);
+
+  // Once mounted, flip to visible on a later frame so the enter transition
+  // plays — a double rAF guarantees the off-screen starting state is painted
+  // before we animate to it (a single frame is too early and skips it).
+  useEffect(() => {
+    if (!render || !open) return;
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setVisible(true));
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, [render, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -78,7 +93,7 @@ export function Drawer({
         tabIndex={-1}
         onClick={onClose}
         className={cn(
-          "absolute inset-0 cursor-default bg-black/60 transition-opacity duration-200",
+          "absolute inset-0 cursor-pointer bg-black/60 transition-opacity duration-200",
           visible ? "opacity-100" : "opacity-0"
         )}
       />
