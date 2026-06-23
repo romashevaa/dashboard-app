@@ -28,11 +28,13 @@ export function WelcomeModal({
     void dismissWelcome();
   };
 
-  // Mark the welcome seen first, then navigate — so the profile page doesn't
-  // briefly re-open this modal before welcomed_at is committed.
-  const goToProfile = async () => {
+  // Navigate immediately for an instant reaction; mark the welcome seen in the
+  // background (fire-and-forget, like `close`). The modal is already closed in
+  // client state and the app layout stays mounted across navigation, so it
+  // won't flash back open while `welcomed_at` commits.
+  const goToProfile = () => {
     setOpen(false);
-    await dismissWelcome();
+    void dismissWelcome();
     router.push("/profile");
   };
 
