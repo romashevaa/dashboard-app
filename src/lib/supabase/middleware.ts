@@ -8,7 +8,13 @@ import type { Database } from "@/lib/db/database.types";
  * Everything else is auth-gated (see CLAUDE.md: "No public pages beyond the
  * login screen").
  */
-const PUBLIC_PATHS = ["/login", "/auth"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth",
+  // Machine-to-machine endpoint with its own bearer-secret auth (the holiday
+  // sheet's Apps Script has no session) — it must not be bounced to /login.
+  "/api/holidays/sync",
+];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some(
