@@ -21,6 +21,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      holidays: {
+        Row: {
+          id: string;
+          name: string;
+          holiday_date: string;
+          observed_date: string | null;
+          emoji: string | null;
+          synced_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          holiday_date: string;
+          observed_date?: string | null;
+          emoji?: string | null;
+          synced_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          holiday_date?: string;
+          observed_date?: string | null;
+          emoji?: string | null;
+          synced_at?: string;
+        };
+        Relationships: [];
+      };
       services: {
         Row: {
           id: string;

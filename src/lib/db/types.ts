@@ -11,6 +11,8 @@ export const APP_ROLES: AppRole[] = ["admin", "editor", "member"];
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
+export type Holiday = Database["public"]["Tables"]["holidays"]["Row"];
+
 /**
  * A profile is "complete" once the essentials are filled in. Drives the
  * onboarding nudge (welcome modal + red dot on the account button).

@@ -1,6 +1,8 @@
 import { CredentialsCard } from "@/components/dashboard/credentials-card";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { TemplatesCard } from "@/components/dashboard/templates-card";
+import { AgencyEventsCard } from "@/components/events/agency-events-card";
+import { getAgencyEvents } from "@/lib/events/agency-events";
 
 /**
  * Dashboard. Responsive:
@@ -12,7 +14,9 @@ import { TemplatesCard } from "@/components/dashboard/templates-card";
  * The Credentials + Templates pair uses `display: contents` below lg so each
  * flows as its own card, then groups into the center column at lg.
  */
-export default function OverviewPage() {
+export default async function OverviewPage() {
+  const { holidays, birthdays } = await getAgencyEvents();
+
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:h-full lg:grid-cols-3 lg:grid-rows-[repeat(10,minmax(0,1fr))] lg:gap-8">
       <DashboardCard
@@ -22,11 +26,9 @@ export default function OverviewPage() {
         href="/events"
         className="lg:col-span-2 lg:row-span-[4]"
       />
-      <DashboardCard
-        title="Agency events"
-        subtitle="Upcoming holidays & events"
-        icon="calendar"
-        href="/events"
+      <AgencyEventsCard
+        holidays={holidays}
+        birthdays={birthdays}
         className="lg:col-start-3 lg:row-start-1 lg:row-span-[6]"
       />
       <DashboardCard
