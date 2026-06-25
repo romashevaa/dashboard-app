@@ -135,8 +135,24 @@ function displayName(p: Pick<Profile, "first_name" | "last_name" | "full_name" |
 export async function getAgencyEvents(): Promise<AgencyEvents> {
   const supabase = await createClient();
 
-  const now = new Date();
-  const todayKey = monthDayKey(now.getMonth() + 1, now.getDate());
+  // "Today" is evaluated in the agency's timezone (Kyiv), not the server's UTC
+  // clock, so the date/weekday and the previous/next split stay correct near
+  // midnight.
+  const todayParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Kyiv",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "long",
+  }).formatToParts(new Date());
+  const part = (type: string) =>
+    todayParts.find((p) => p.type === type)?.value ?? "";
+
+  const tYear = Number(part("year"));
+  const tMonth = Number(part("month")); // 1-12
+  const tDay = Number(part("day"));
+  const tWeekday = part("weekday"); // "Thursday"
+  const todayKey = monthDayKey(tMonth, tDay);
 
   const [holidaysRes, profilesRes] = await Promise.all([
     supabase.from("holidays").select("*"),
@@ -192,7 +208,7 @@ export async function getAgencyEvents(): Promise<AgencyEvents> {
 
   // Today + the holidays bracketing it, for the dashboard card. Compared on
   // UTC-midnight epochs so the "previous / today / next" split is exact.
-  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayUTC = Date.UTC(tYear, tMonth - 1, tDay);
   const dayMs = 86_400_000;
 
   const toHighlight = (h: Holiday): HolidayHighlight => {
@@ -227,10 +243,10 @@ export async function getAgencyEvents(): Promise<AgencyEvents> {
   const prevRow = [...dated].reverse().find((r) => r.t < todayUTC) ?? null;
 
   const today: TodayInfo = {
-    weekday: WEEKDAY_FULL[now.getDay()],
-    monthLabel: MONTH_LABEL[now.getMonth()],
-    day: now.getDate(),
-    year: now.getFullYear(),
+    weekday: tWeekday,
+    monthLabel: MONTH_LABEL[tMonth - 1],
+    day: tDay,
+    year: tYear,
     holiday: todayRow ? toHighlight(todayRow.h) : null,
   };
 
