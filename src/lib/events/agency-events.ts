@@ -53,9 +53,41 @@ export type BirthdayItem = {
   label: string;
 };
 
+/** A compact holiday reference for the dashboard card (today / prev / next). */
+export type HolidayHighlight = {
+  id: string;
+  name: string;
+  emoji: string | null;
+  /** "Jun 28" — the effective day-off date. */
+  dateLabel: string;
+  /** "Sun" — short weekday of the effective date. */
+  weekday: string;
+  /** Human relative distance, e.g. "in 3 days" / "Today" / "12 days ago". */
+  relative: string;
+};
+
+/** Today's date for the dashboard card, plus any holiday landing on it. */
+export type TodayInfo = {
+  /** "Thursday". */
+  weekday: string;
+  /** "June". */
+  monthLabel: string;
+  /** 25. */
+  day: number;
+  /** 2026. */
+  year: number;
+  /** The holiday falling exactly today, if any. */
+  holiday: HolidayHighlight | null;
+};
+
 export type AgencyEvents = {
   holidays: HolidayItem[];
   birthdays: BirthdayItem[];
+  today: TodayInfo;
+  /** Most recent past holiday (null if none on record). */
+  previousHoliday: HolidayHighlight | null;
+  /** Soonest upcoming holiday (null if none on record). */
+  nextHoliday: HolidayHighlight | null;
 };
 
 /** month*100 + day, for "upcoming first" comparison within a year. */
@@ -78,6 +110,17 @@ function weekdayFull(iso: string): string {
 function monthDay(iso: string): string {
   const { month, day } = parts(iso);
   return `${MONTH_LABEL[month - 1]} ${day}`;
+}
+
+/** "Sun" — short weekday. */
+function weekdayShort(iso: string): string {
+  return weekdayFull(iso).slice(0, 3);
+}
+
+/** UTC midnight epoch for a YYYY-MM-DD string — safe to subtract for day math. */
+function isoUTC(iso: string): number {
+  const [y, m, d] = iso.split("-").map(Number);
+  return Date.UTC(y, m - 1, d);
 }
 
 function displayName(p: Pick<Profile, "first_name" | "last_name" | "full_name" | "email">): string {
@@ -147,5 +190,55 @@ export async function getAgencyEvents(): Promise<AgencyEvents> {
     .sort((a, b) => a._wrap - b._wrap || a._key - b._key)
     .map(({ _wrap, _key, ...item }) => item);
 
-  return { holidays, birthdays };
+  // Today + the holidays bracketing it, for the dashboard card. Compared on
+  // UTC-midnight epochs so the "previous / today / next" split is exact.
+  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const dayMs = 86_400_000;
+
+  const toHighlight = (h: Holiday): HolidayHighlight => {
+    const eff = h.observed_date ?? h.holiday_date;
+    const days = Math.round((isoUTC(eff) - todayUTC) / dayMs);
+    const relative =
+      days === 0
+        ? "Today"
+        : days === 1
+          ? "Tomorrow"
+          : days === -1
+            ? "Yesterday"
+            : days > 0
+              ? `in ${days} days`
+              : `${-days} days ago`;
+    return {
+      id: h.id,
+      name: h.name,
+      emoji: h.emoji,
+      dateLabel: monthDay(eff),
+      weekday: weekdayShort(eff),
+      relative,
+    };
+  };
+
+  const dated = ((holidaysRes.data ?? []) as Holiday[])
+    .map((h) => ({ h, t: isoUTC(h.observed_date ?? h.holiday_date) }))
+    .sort((a, b) => a.t - b.t);
+
+  const todayRow = dated.find((r) => r.t === todayUTC) ?? null;
+  const nextRow = dated.find((r) => r.t > todayUTC) ?? null;
+  const prevRow = [...dated].reverse().find((r) => r.t < todayUTC) ?? null;
+
+  const today: TodayInfo = {
+    weekday: WEEKDAY_FULL[now.getDay()],
+    monthLabel: MONTH_LABEL[now.getMonth()],
+    day: now.getDate(),
+    year: now.getFullYear(),
+    holiday: todayRow ? toHighlight(todayRow.h) : null,
+  };
+
+  return {
+    holidays,
+    birthdays,
+    today,
+    previousHoliday: prevRow ? toHighlight(prevRow.h) : null,
+    nextHoliday: nextRow ? toHighlight(nextRow.h) : null,
+  };
 }

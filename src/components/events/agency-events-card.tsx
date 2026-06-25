@@ -10,7 +10,9 @@ import { EmojiIcon } from "@/components/ui/emoji-icon";
 import type {
   AgencyEvents,
   BirthdayItem,
+  HolidayHighlight,
   HolidayItem,
+  TodayInfo,
 } from "@/lib/events/agency-events";
 
 type Tab = "holidays" | "birthdays";
@@ -23,6 +25,9 @@ type Tab = "holidays" | "birthdays";
 export function AgencyEventsCard({
   holidays,
   birthdays,
+  today,
+  previousHoliday,
+  nextHoliday,
   className,
 }: AgencyEvents & { className?: string }) {
   const [open, setOpen] = useState(false);
@@ -30,21 +35,52 @@ export function AgencyEventsCard({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
+      <section
         className={cn(
-          "group flex flex-col gap-5 rounded-xl bg-background p-5 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/60",
+          "flex flex-col gap-5 rounded-xl bg-background p-5",
           className
         )}
       >
-        <CardHeading
-          icon="calendar"
-          title="Agency events"
-          subtitle="Upcoming holidays & events"
-          linked
-        />
-      </button>
+        <div className="flex items-start justify-between gap-3">
+          <CardHeading
+            icon="calendar"
+            title="Agency events"
+            subtitle="Holidays & birthdays"
+          />
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="shrink-0 rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-foreground/80 outline-none transition-colors hover:bg-white/[0.08] focus-visible:ring-2 focus-visible:ring-ring/60"
+          >
+            All events
+          </button>
+        </div>
+
+        {/* Today + the holidays around it — desktop only, matching the other
+            cards which reveal their visual at lg. */}
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open agency events"
+          className="hidden min-h-0 flex-1 flex-col gap-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/60 lg:flex"
+        >
+          <TodayStrip today={today} />
+
+          <div className="flex flex-col gap-2">
+            {nextHoliday ? (
+              <HolidayRow data={nextHoliday} label="Up next" highlighted />
+            ) : null}
+            {previousHoliday ? (
+              <HolidayRow data={previousHoliday} label="Previous" />
+            ) : null}
+            {!nextHoliday && !previousHoliday ? (
+              <p className="rounded-lg bg-white/[0.04] px-3 py-4 text-center text-xs text-muted-foreground">
+                No holidays on record yet.
+              </p>
+            ) : null}
+          </div>
+        </button>
+      </section>
 
       <Drawer open={open} onClose={() => setOpen(false)} title="Agency Events">
         <div className="flex flex-col gap-5">
@@ -74,6 +110,114 @@ export function AgencyEventsCard({
         </div>
       </Drawer>
     </>
+  );
+}
+
+/** Today's weekday + date; switches to a celebratory state on a holiday. */
+function TodayStrip({ today }: { today: TodayInfo }) {
+  const monthChip = today.monthLabel.slice(0, 3).toUpperCase();
+
+  if (today.holiday) {
+    return (
+      <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-[#17238c] to-[#0059d6] p-3">
+        <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-white/15 text-2xl leading-none">
+          {today.holiday.emoji ?? "🎉"}
+        </span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-white/70">
+            Today · {today.weekday}
+          </p>
+          <p className="truncate text-sm font-semibold text-white">
+            {today.holiday.name}
+          </p>
+          <p className="text-xs text-white/70">
+            {today.monthLabel} {today.day}, {today.year}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 rounded-lg bg-white/[0.04] p-3">
+      <span className="flex size-12 shrink-0 flex-col items-center justify-center rounded-lg bg-[#0059d6] leading-none text-white">
+        <span className="text-base font-bold">{today.day}</span>
+        <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/80">
+          {monthChip}
+        </span>
+      </span>
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#2eb2ff]">
+          Today
+        </p>
+        <p className="text-sm font-semibold text-foreground">{today.weekday}</p>
+        <p className="text-xs text-muted-foreground">
+          {today.monthLabel} {today.day}, {today.year}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** A single holiday line (emoji + date/weekday + name + relative distance). */
+function HolidayRow({
+  data,
+  label,
+  highlighted = false,
+}: {
+  data: HolidayHighlight;
+  label: string;
+  highlighted?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-lg px-3 py-2.5",
+        highlighted ? "bg-[#0059d6]" : "bg-white/[0.04]"
+      )}
+    >
+      <span
+        className={cn(
+          "grid size-10 shrink-0 place-items-center rounded-full text-lg leading-none",
+          highlighted ? "bg-white/15" : "bg-white/[0.06]"
+        )}
+      >
+        {data.emoji ?? "📌"}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p
+          className={cn(
+            "truncate text-sm font-semibold",
+            highlighted ? "text-white" : "text-foreground"
+          )}
+        >
+          {data.dateLabel}, {data.weekday}
+        </p>
+        <p
+          className={cn(
+            "truncate text-xs",
+            highlighted ? "text-white/70" : "text-muted-foreground"
+          )}
+        >
+          {data.name}
+        </p>
+      </div>
+      <div className="shrink-0 text-right">
+        <p
+          className={cn(
+            "text-[10px] font-semibold uppercase tracking-wide",
+            highlighted ? "text-white/70" : "text-muted-foreground"
+          )}
+        >
+          {label}
+        </p>
+        <p
+          className={cn("text-xs", highlighted ? "text-white" : "text-foreground/80")}
+        >
+          {data.relative}
+        </p>
+      </div>
+    </div>
   );
 }
 

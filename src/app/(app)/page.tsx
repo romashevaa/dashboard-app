@@ -15,7 +15,8 @@ import { getAgencyEvents } from "@/lib/events/agency-events";
  * flows as its own card, then groups into the center column at lg.
  */
 export default async function OverviewPage() {
-  const { holidays, birthdays } = await getAgencyEvents();
+  const { holidays, birthdays, today, previousHoliday, nextHoliday } =
+    await getAgencyEvents();
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:h-full lg:grid-cols-3 lg:grid-rows-[repeat(10,minmax(0,1fr))] lg:gap-8">
@@ -29,6 +30,9 @@ export default async function OverviewPage() {
       <AgencyEventsCard
         holidays={holidays}
         birthdays={birthdays}
+        today={today}
+        previousHoliday={previousHoliday}
+        nextHoliday={nextHoliday}
         className="lg:col-start-3 lg:row-start-1 lg:row-span-[6]"
       />
       <DashboardCard
