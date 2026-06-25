@@ -62,6 +62,10 @@ export type HolidayHighlight = {
   dateLabel: string;
   /** "Sun" — short weekday of the effective date. */
   weekday: string;
+  /** "Sunday" — full weekday of the effective date. */
+  weekdayLong: string;
+  /** Signed day distance from today (positive = future, negative = past, 0 = today). */
+  days: number;
   /** Human relative distance, e.g. "in 3 days" / "Today" / "12 days ago". */
   relative: string;
 };
@@ -230,6 +234,8 @@ export async function getAgencyEvents(): Promise<AgencyEvents> {
       emoji: h.emoji,
       dateLabel: monthDay(eff),
       weekday: weekdayShort(eff),
+      weekdayLong: weekdayFull(eff),
+      days,
       relative,
     };
   };

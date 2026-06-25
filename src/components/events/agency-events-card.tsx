@@ -37,7 +37,7 @@ export function AgencyEventsCard({
     <>
       <section
         className={cn(
-          "flex flex-col gap-5 rounded-xl bg-background p-5",
+          "flex flex-col gap-5 rounded-xl bg-background p-5 lg:h-full",
           className
         )}
       >
@@ -56,29 +56,17 @@ export function AgencyEventsCard({
           </button>
         </div>
 
-        {/* Today + the holidays around it — desktop only, matching the other
-            cards which reveal their visual at lg. */}
+        {/* Countdown to the next holiday — desktop only, matching the other
+            cards which reveal their visual at lg. Fills the block: hero grows,
+            footer pins to the bottom. */}
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open agency events"
-          className="hidden min-h-0 flex-1 flex-col gap-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/60 lg:flex"
+          className="hidden min-h-0 flex-1 flex-col outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-ring/60 lg:flex"
         >
-          <TodayStrip today={today} />
-
-          <div className="flex flex-col gap-2">
-            {nextHoliday ? (
-              <HolidayRow data={nextHoliday} label="Up next" highlighted />
-            ) : null}
-            {previousHoliday ? (
-              <HolidayRow data={previousHoliday} label="Previous" />
-            ) : null}
-            {!nextHoliday && !previousHoliday ? (
-              <p className="rounded-lg bg-white/[0.04] px-3 py-4 text-center text-xs text-muted-foreground">
-                No holidays on record yet.
-              </p>
-            ) : null}
-          </div>
+          <CountdownHero next={nextHoliday} todayHoliday={today.holiday} />
+          <HeroFooter today={today} previous={previousHoliday} />
         </button>
       </section>
 
@@ -113,110 +101,104 @@ export function AgencyEventsCard({
   );
 }
 
-/** Today's weekday + date; switches to a celebratory state on a holiday. */
-function TodayStrip({ today }: { today: TodayInfo }) {
-  const monthChip = today.monthLabel.slice(0, 3).toUpperCase();
-
-  if (today.holiday) {
+/**
+ * The card's focal point: a big countdown to the next holiday. Switches to a
+ * celebratory state when a holiday lands on today, and a quiet fallback when
+ * there are no upcoming holidays on record.
+ */
+function CountdownHero({
+  next,
+  todayHoliday,
+}: {
+  next: HolidayHighlight | null;
+  todayHoliday: HolidayHighlight | null;
+}) {
+  if (todayHoliday) {
     return (
-      <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-[#17238c] to-[#0059d6] p-3">
-        <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-white/15 text-2xl leading-none">
-          {today.holiday.emoji ?? "🎉"}
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2eb2ff]">
+          Today
+        </p>
+        <span className="my-1 text-4xl leading-none">
+          {todayHoliday.emoji ?? "🎉"}
         </span>
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-white/70">
-            Today · {today.weekday}
-          </p>
-          <p className="truncate text-sm font-semibold text-white">
-            {today.holiday.name}
-          </p>
-          <p className="text-xs text-white/70">
-            {today.monthLabel} {today.day}, {today.year}
-          </p>
-        </div>
+        <p className="text-xl font-extrabold tracking-tight text-white">
+          It&rsquo;s {todayHoliday.name}!
+        </p>
+        <p className="text-sm text-white/60">
+          {todayHoliday.weekdayLong}, {todayHoliday.dateLabel}
+        </p>
+      </div>
+    );
+  }
+
+  if (!next) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 text-center">
+        <span className="text-4xl leading-none">🗓️</span>
+        <p className="text-sm text-muted-foreground">
+          No upcoming holidays on record.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-lg bg-white/[0.04] p-3">
-      <span className="flex size-12 shrink-0 flex-col items-center justify-center rounded-lg bg-[#0059d6] leading-none text-white">
-        <span className="text-base font-bold">{today.day}</span>
-        <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/80">
-          {monthChip}
-        </span>
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center text-center">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2eb2ff]">
+        Next holiday
+      </p>
+      <span className="mb-1 mt-1 text-4xl leading-none">
+        {next.emoji ?? "📌"}
       </span>
-      <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#2eb2ff]">
-          Today
+      {next.days === 1 ? (
+        <p className="text-5xl font-extrabold leading-none tracking-tight text-white">
+          Tomorrow
         </p>
-        <p className="text-sm font-semibold text-foreground">{today.weekday}</p>
-        <p className="text-xs text-muted-foreground">
-          {today.monthLabel} {today.day}, {today.year}
+      ) : (
+        <p className="flex items-baseline justify-center gap-2">
+          <span className="text-6xl font-extrabold leading-none tracking-tight text-white">
+            {next.days}
+          </span>
+          <span className="text-lg text-white/60">days away</span>
         </p>
-      </div>
+      )}
+      <p className="mt-3 text-lg font-semibold text-white/90">{next.name}</p>
+      <p className="text-sm text-white/60">
+        {next.weekdayLong}, {next.dateLabel}
+      </p>
     </div>
   );
 }
 
-/** A single holiday line (emoji + date/weekday + name + relative distance). */
-function HolidayRow({
-  data,
-  label,
-  highlighted = false,
+/** Bottom strip: today's date on the left, the most recent holiday on the right. */
+function HeroFooter({
+  today,
+  previous,
 }: {
-  data: HolidayHighlight;
-  label: string;
-  highlighted?: boolean;
+  today: TodayInfo;
+  previous: HolidayHighlight | null;
 }) {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2.5",
-        highlighted ? "bg-[#0059d6]" : "bg-white/[0.04]"
-      )}
-    >
-      <span
-        className={cn(
-          "grid size-10 shrink-0 place-items-center rounded-full text-lg leading-none",
-          highlighted ? "bg-white/15" : "bg-white/[0.06]"
-        )}
-      >
-        {data.emoji ?? "📌"}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p
-          className={cn(
-            "truncate text-sm font-semibold",
-            highlighted ? "text-white" : "text-foreground"
-          )}
-        >
-          {data.dateLabel}, {data.weekday}
+    <div className="flex shrink-0 items-end justify-between gap-3 border-t border-white/[0.08] pt-4">
+      <div className="min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-white/45">
+          Today
         </p>
-        <p
-          className={cn(
-            "truncate text-xs",
-            highlighted ? "text-white/70" : "text-muted-foreground"
-          )}
-        >
-          {data.name}
+        <p className="text-[13px] text-white/80">
+          {today.weekday.slice(0, 3)}, {today.monthLabel} {today.day}
         </p>
       </div>
-      <div className="shrink-0 text-right">
-        <p
-          className={cn(
-            "text-[10px] font-semibold uppercase tracking-wide",
-            highlighted ? "text-white/70" : "text-muted-foreground"
-          )}
-        >
-          {label}
-        </p>
-        <p
-          className={cn("text-xs", highlighted ? "text-white" : "text-foreground/80")}
-        >
-          {data.relative}
-        </p>
-      </div>
+      {previous ? (
+        <div className="min-w-0 text-right">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-white/45">
+            Last holiday
+          </p>
+          <p className="truncate text-[13px] text-white/80">
+            {previous.name} · {previous.dateLabel}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
